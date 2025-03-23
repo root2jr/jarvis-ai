@@ -4,7 +4,7 @@ import './App.css';
 import Threed from './Threed';
 import Particles from './Particles';
 import ShinyText from './ShinyText';
-import Loginpage from './loginpage';
+import Loginpage from './Loginpage';
 import AiPage from './AiPage';
 import ProtectedRoute from './ProtectedRoute';
 

@@ -124,7 +124,7 @@ input:-webkit-autofill:active {
     align-items: center;
     align-content: center;
     transition: .5s ease;
-    transform: translateY(-550%);
+    transform: translateY(-1050%);
 }
 
 .login-msg h1 {
