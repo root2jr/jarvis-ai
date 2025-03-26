@@ -3,20 +3,40 @@ import './AiPage.css';
 import aiBg from './4872-181170832.mp4';
 import axios from 'axios';
 import jarvisLogo from './jarvis-logo.jpg';
+import Tasks from './Tasks';
 
 const AiPage = () => {
-   
+ 
   const [name, setName] = useState('');
+  const [taskbarName, setTaskbarName] = useState(() => {
+    const stored = localStorage.getItem("tasks");
+    return stored ? JSON.parse(stored) : [];
+  });
+  
+  
+  useEffect(() => {
+    let storedTasks = localStorage.getItem("tasks");
+    if (storedTasks) {
+      setTaskbarName(JSON.parse(storedTasks));
+      console.log(taskbarName);
+    }
+  }, [])
 
-   const userfunc = async () =>{
-    const usernamee = await  axios.get('http://localhost:5000/username');
-    const username = usernamee.data;
-    setName(username);
-    console.log(name);
-   }
-   userfunc();
+  useEffect(() => {
+    const userfunc = async () => {
+      const usernamee = await axios.get('https://jarvis-ai-1.onrender.com/username');
+      const username = usernamee.data;
+      setName(username);
+      console.log(name);
+    }
+    userfunc();
+  }, [])
 
 
+  useEffect(() => {
+    localStorage.setItem("tasks", JSON.stringify(taskbarName));
+  }, [taskbarName]);
+  
 
 
 
@@ -33,9 +53,9 @@ const AiPage = () => {
     return savedMessages
       ? JSON.parse(savedMessages)
       : [
-          { type: 'user', text: "Wake Up J.A.R.V.I.S, Daddy's Home" },
-          { type: 'bot', text: "Welcome Home Sir, What are we going to work on today?" },
-        ];
+        { type: 'user', text: "Wake Up J.A.R.V.I.S, Daddy's Home" },
+        { type: 'bot', text: "Welcome Home Sir, What are we going to work on today?" },
+      ];
   });
   const [loaderRef, setLoaderRef] = useState(false);
 
@@ -46,24 +66,9 @@ const AiPage = () => {
     const timestamp = new Date().toISOString();
     const requests = [];
 
-    if (message.text.toLowerCase().includes('my') && message.text.toLowerCase().includes('name')) {
-      setName(message.text);
-      requests.push(
-        axios.post('https://jr-ai.onrender.com/conversations', {
-          sender: message.type,
-          message: message.text,
-          timestamp,
-          conversationId,
-          username: name,
-        })
-      );
-      console.log('Username is Saved!');
-    
-
-    }
 
     requests.push(
-      axios.post('https://jr-ai.onrender.com/conversations', {
+      axios.post('https://jarvis-ai-8pr6.onrender.com/conversations', {
         sender: message.type,
         message: message.text,
         timestamp,
@@ -78,34 +83,220 @@ const AiPage = () => {
     }
   };
 
+
+  const reminderKeywords = [
+    "remind me to",
+    "remind me at",
+    "set a reminder",
+    "alert me to",
+    "wake me at",
+    "alarm for",
+    "reminder:",
+    "remind",
+    "alert",
+  ];
+  const saveKeywords = [
+    "add task",
+    "note down",
+    "remember to",
+    "schedule",
+    "set a task",
+    "log this",
+    "i need to",
+    "save task",
+    "track this",
+    "task to do",
+    "put this on my list",
+    "i have to",
+    "assign task"
+  ];
+
+  const viewKeywords = [
+    "what are my tasks",
+    "show my tasks",
+    "list tasks",
+    "pending tasks",
+    "tasks left",
+    "to-do list",
+    "what do i have to do",
+    "task status",
+    "view tasks",
+    "open task list",
+    "what's pending",
+    "remind me my tasks",
+    "open taskbar"
+  ];
+
+
+
+
+  const [reminderName, setReminderName] = useState("");
+  const [reminderTime, setReminderTime] = useState("");
+  const [taskName, setTaskName] = useState("");
+
+
+
+
+
   const getResponse = async () => {
     const inputField = document.getElementById('input');
     const message = inputField.value.trim();
     if (!message) return;
-
+    const isViewTaskMessage = (message) => {
+      return viewKeywords.some(keyword =>
+        message.toLowerCase().includes(keyword)
+      );
+    };
+    if (isViewTaskMessage(message)) {
+      let TaskbarToggle = document.getElementById('taskbar');
+      TaskbarToggle.classList.toggle("tasktoggle");
+      inputField.value = "";
+      return;
+    }
     const userMessage = { type: 'user', text: message };
     setMessages((prev) => [...prev, userMessage]);
     saveData(userMessage, userid);
+    const isReminderMessage = (message) => {
+      return reminderKeywords.some(keyword =>
+        message.toLowerCase().includes(keyword)
+      );
+    };
+    const isTaskMessage = (message) => {
+      return saveKeywords.some(keyword =>
+        message.toLowerCase().includes(keyword)
+      );
+    };
 
-    try {
-      setLoaderRef(true);
-      const res = await axios.post('https://jr-ai.onrender.com/api/gemini', {
-        prompt: message,
-        conversationId: userid,
+
+    if (isTaskMessage(message)) {
+      setMessages((prev) => [...prev, { text: "Use 'Tick:' in your prompt, So What actually is your task?" }]);
+      inputField.value = ""
+    }
+
+
+
+
+    else if (message.toLowerCase().includes('tick:')) {
+      const tName = message.slice(5).trim();
+      setTaskName(tName);
+      setTaskbarName((prev) => [...prev, { type: 'task', message: tName }]);
+      console.log(taskbarName);
+      setMessages((prev) => [...prev, { text: "Use 'Deadline:' in your prompt, So When actually is your Deadline?" }]);
+      inputField.value = ""
+    }
+    else if (message.toLowerCase().includes("deadline:")) {
+      const deadline = message.slice(9).trim();
+      const saveTaskdeadline = await axios.post("http://localhost:5000/tasks", {
+        taskname: taskName,
+        deadline: deadline
+      })
+      setMessages((prev) => [...prev, { text: "Task Added Successfully!" }]);
+      inputField.value = ""
+    }
+
+
+
+
+
+
+
+    else if (message.toLowerCase().includes('name:')) {
+      const summa = message.slice(5).trim();
+      setReminderName(message.slice(5).trim());
+      setMessages((prev) => [...prev, { text: "Use 'Time:' before the prompt! Time:" }]);
+      inputField.value = "";
+      const sendReminder = await axios.post("http://localhost:5000/reminders", {
+        name: summa,
+        time: "",
       });
-      let botMessageText = res.data.response.startsWith('JARVIS:')
-        ? res.data.response.replace('JARVIS:', '')
-        : res.data.response;
-      const botMessage = { type: 'bot', text: botMessageText };
-      setMessages((prev) => [...prev, botMessage]);
-      saveData(botMessage, userid);
-    } catch (err) {
-      console.error('Error fetching response:', err);
-    } finally {
-      setLoaderRef(false);
-      inputField.value = '';
+      const remdata = sendReminder.data;
+      console.log(remdata)
+    }
+    else if (message.toLowerCase().includes('time:')) {
+      const kamma = message.slice(5).trim();
+      setReminderTime(message.slice(5).trim());
+      setMessages((prev) => [...prev, { text: "Reminder is Set!" }]);
+      inputField.value = ""
+      const sendReminder = await axios.post("http://localhost:5000/reminders", {
+        name: reminderName,
+        time: kamma
+      });
+      const remdata = sendReminder.data;
+      console.log(remdata)
+
+    }
+
+
+
+
+
+
+
+    else if (isReminderMessage(message)) {
+      console.log("Reminder Detected");
+      let reminderName = "Use 'Name:' before the prompt What's the Reminder for?";
+      setMessages((prev) => [...prev, { text: reminderName }]);
+      inputField.value = ""
+    }
+
+    else {
+      try {
+        setLoaderRef(true);
+        const res = await axios.post('https://jarvis-ai-8pr6.onrender.com/api/gemini', {
+          prompt: message,
+          conversationId: userid,
+        });
+        let botMessageText = res.data.response.startsWith('JARVIS:')
+          ? res.data.response.replace('JARVIS:', '')
+          : res.data.response;
+        const botMessage = { type: 'bot', text: botMessageText };
+        setMessages((prev) => [...prev, botMessage]);
+        saveData(botMessage, userid);
+      } catch (err) {
+        console.error('Error fetching response:', err);
+      } finally {
+        setLoaderRef(false);
+        inputField.value = '';
+      }
     }
   };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   const startListening = () => {
     const recognition = new SpeechRecognition();
@@ -134,11 +325,11 @@ const AiPage = () => {
     ]);
   };
 
-  useEffect (() => {
+  useEffect(() => {
     if (chatRef.current) {
       chatRef.current.scrollTop = chatRef.current.scrollHeight;
     }
-  },[messages]);
+  }, [messages]);
 
   const toggleNav = () => {
     navRef.current.classList.toggle('hammy');
@@ -206,7 +397,9 @@ const AiPage = () => {
             )}
           </ul>
         </div>
-
+        <div className="task-wrapper">
+          <Tasks tasks={taskbarName} />
+        </div>
         <div className='input-wrapper'>
           <button className='send' onClick={getResponse}>
             <i className='fa-solid fa-paper-plane'></i>

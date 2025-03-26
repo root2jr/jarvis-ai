@@ -11,7 +11,7 @@ const Loginpage = () => {
 
         setTimeout(() => {
             navigate('/ai');
-        }, 5000)
+        }, 2000)
     }
 
 
@@ -33,7 +33,7 @@ const Loginpage = () => {
            return ;
         }
 
-        const response = await axios.post('http://localhost:5000/login', {
+        const response = await axios.post('https://jarvis-ai-1.onrender.com/login', {
             username: username,
             password: password
         });
