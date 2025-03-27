@@ -31,7 +31,6 @@ app.post("/reminders", async (req, res) => {
     const { name, time } = req.body;
 
     if (!name) return res.status(400).send("Reminder name is required.");
-
     const updatedReminder = await Reminder.findOneAndUpdate(
       { name },
       { time },
@@ -102,35 +101,55 @@ const sendTelegramMessage = async (text) => {
     console.error("Telegram message failed:", err.message);
   }
 };
+const cron = require('node-cron');
 
 cron.schedule('* * * * *', async () => {
-  const now = new Date();
-  const currentTime = now.toTimeString().slice(0, 5);
-  console.log(` Cron Job at ${now.toLocaleTimeString('en-IN', { hour12: false })}`);
+  const currentISTTime = new Date().toLocaleTimeString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
+  console.log(`⏰ Cron Job running at IST ${currentISTTime}`);
 
   try {
-    const dueReminders = await Reminder.find({ time: currentTime });
+    const dueReminders = await Reminder.find({ time: currentISTTime });
 
     for (const rem of dueReminders) {
       const message = `Reminder: ${rem.name}!`;
       await sendTelegramMessage(message);
+
+      await Reminder.findByIdAndDelete(rem._id);
     }
   } catch (error) {
-    console.error(" Error Checking Reminders:", error);
+    console.error("❌ Error Checking Reminders:", error);
   }
 });
 
+
+const cron = require('node-cron');
+
 cron.schedule('* * * * *', async () => {
   const now = new Date();
-  now.setSeconds(0, 0); // zero out seconds and milliseconds
-  const nextMinute = new Date(now.getTime() + 60 * 1000);
-  
-  console.log("⏰ Checking tasks at:", now.toISOString());
+
+  // Convert UTC time to IST
+  const istDate = new Date(
+    now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })
+  );
+
+  // Zero out seconds & milliseconds
+  istDate.setSeconds(0, 0);
+
+  // Calculate the next minute in IST
+  const nextMinute = new Date(istDate.getTime() + 60 * 1000);
+
+  console.log("⏰ Checking tasks at IST:", istDate.toISOString());
 
   try {
     const dueTasks = await TaskModel.find({
       deadline: {
-        $gte: now,
+        $gte: istDate,
         $lt: nextMinute,
       },
     });
@@ -160,6 +179,7 @@ cron.schedule('* * * * *', async () => {
     console.error("❌ Error fetching tasks:", error);
   }
 });
+
 
 
 

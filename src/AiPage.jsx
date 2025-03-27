@@ -186,7 +186,7 @@ const AiPage = () => {
     }
     else if (message.toLowerCase().includes("deadline:")) {
       const deadline = message.slice(9).trim();
-      const saveTaskdeadline = await axios.post("http://localhost:5000/tasks", {
+      const saveTaskdeadline = await axios.post("https://jarvis-ai-2.onrender.com/tasks", {
         taskname: taskName,
         deadline: deadline
       })
@@ -205,7 +205,7 @@ const AiPage = () => {
       setReminderName(message.slice(5).trim());
       setMessages((prev) => [...prev, { text: "Use 'Time:' before the prompt! Time:" }]);
       inputField.value = "";
-      const sendReminder = await axios.post("http://localhost:5000/reminders", {
+      const sendReminder = await axios.post("https://jarvis-ai-2.onrender.com/reminders", {
         name: summa,
         time: "",
       });
@@ -217,7 +217,7 @@ const AiPage = () => {
       setReminderTime(message.slice(5).trim());
       setMessages((prev) => [...prev, { text: "Reminder is Set!" }]);
       inputField.value = ""
-      const sendReminder = await axios.post("http://localhost:5000/reminders", {
+      const sendReminder = await axios.post("https://jarvis-ai-2.onrender.com/reminders", {
         name: reminderName,
         time: kamma
       });
