@@ -101,7 +101,6 @@ const sendTelegramMessage = async (text) => {
     console.error("Telegram message failed:", err.message);
   }
 };
-const cron = require('node-cron');
 
 cron.schedule('* * * * *', async () => {
   const currentISTTime = new Date().toLocaleTimeString('en-IN', {
