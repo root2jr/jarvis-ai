@@ -128,7 +128,6 @@ cron.schedule('* * * * *', async () => {
 });
 
 
-const cron = require('node-cron');
 
 cron.schedule('* * * * *', async () => {
   const now = new Date();
