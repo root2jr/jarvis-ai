@@ -1,21 +1,78 @@
-import React from 'react'
-import bg from './bg.mp4'
-import './Fp.css'
+import { useState } from 'react';
+import bg from './bg.mp4';
+import './Fp.css';
+import axios from 'axios';
+import { useRef } from 'react';
+
 
 const Forgotpassword = () => {
+    const otpRef = useRef(null);
+    const [firstotp,setFirstotp] = useState();
+    const [mailName,setMailName] = useState();
+    const [newpass,setNewpass] = useState();
+
+    const sendEmail = async () => {
+        if(newpass == 1){
+            const newpassword =  document.getElementById('email').value;
+            const passchange = axios.post('http://localhost:5000/login',{
+             usermail: mailName,
+             password: ''
+            })
+        const usermail = document.getElementById('email').value;
+        setMailName(usermail);
+        const userotp = document.getElementById('OTP').value;
+        const mailinput = document.getElementById('email');
+        const otpinput = document.getElementById('OTP');      
+        if(userotp){
+            if(userotp == firstotp){
+                alert('SUCCESS!');
+                mailinput.value = '';
+                mailinput.placeholder = 'Enter New Password';
+                otpinput.value = '';
+                otpRef.current.classList.toggle('init');
+                setNewpass(1);
+                return ;
+            }
+        }
+       
+        }
+        const otp = Math.floor(100000 + Math.random() * 900000);
+        setFirstotp(otp);
+        if (!usermail) {
+            alert('Please enter your email.');
+            return;
+        }
+       
+        else{
+        console.log('Sending email...');
+
+        try {
+            const response = await axios.post('http://localhost:5000/otp', {
+                usermail: usermail,
+                otp: otp,
+            });
+            console.log('Response:', response);
+            otpRef.current.classList.toggle('init');
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to send email. Try again.');
+        }
+
+      }  };
+
     return (
         <div className='forgotpage'>
             <video autoPlay muted loop id='bgVideo'>
                 <source src={bg} type='video/mp4' />
             </video>
             <div className="bg-layer">
-                <h1 id='otp-head'>An OTP has been sent to your E-MAIL</h1>
-                <input id='email' placeholder='Enter your E-MAIL' type='email'></input>
-                <input id='OTP' placeholder='Enter the OTP'></input>
-                <button>Enter</button>
+                <h1 id='otp-head'>YOUR EMAIL</h1>
+                <input id='email' placeholder='Enter your E-MAIL' type='email' />
+                <input ref={otpRef} id='OTP' placeholder='OTP' type='number' />
+                <button onClick={sendEmail}>Enter</button>
             </div>
         </div>
-    )
-}
+    );
+};
 
-export default Forgotpassword
+export default Forgotpassword;

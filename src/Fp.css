@@ -52,6 +52,14 @@
     border: none;
     color:black;
 }
-#otp-head{
-    opacity: 0;
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+#OTP{
+    display: none;
+}
+.init{
+    display: block !important;
 }
