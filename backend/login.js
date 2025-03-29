@@ -12,7 +12,6 @@ import nodemailer from 'nodemailer'
 dotenv.config();
 const app = express();
 
-const Router = express.Router();
 app.use(cors());
 app.use(express.json());
 const PORT = process.env.PORT;
@@ -39,16 +38,19 @@ app.post('/login', async (req, res) => {
         const { usermail, password, change } = req.body;
         name = usermail;
         if(change){
-            const changeUserpassword = await model.findOneAndUpdate({ usermail },{password});
+            const hashedpass = await bcrypt.hash(password,saltRounds);
+            const changeUserpassword = await model.findOneAndUpdate({ usermail },{ password: hashedpass});
             console.log('Password changed successfully');
         }
+        else{
         const existingUser = await model.findOne({ usermail });
 
         if (existingUser) {
             const compare = await bcrypt.compare(password, existingUser.password);
             if (compare) {
-                const token = jwt.sign({ username: existingUser }, JWT_SECRET, { expiresIn: "1d" });
-                return res.json({ status: 'login', message: 'Login accepted', token });
+                const token = jwt.sign({ username: existingUser }, JWT_SECRET, { expiresIn: "7d" });
+                
+                return res.send({ status: 'login', message: 'Login accepted', token, usermail });
 
             } else {
                 return res.json({ status: 'error', message: 'Wrong credentials' });
@@ -60,7 +62,7 @@ app.post('/login', async (req, res) => {
             return res.json({ status: 'ok', message: 'New user created' });
         }
 
-    } catch (err) {
+    }} catch (err) {
         console.error("Error:", err);
         return res.status(500).json({ status: 'error', message: 'Something went wrong' });
     }

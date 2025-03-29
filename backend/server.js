@@ -22,12 +22,14 @@ const messageSchema = new mongoose.Schema({
   message: String,
   timestamp: String,
   conversationId: String,
-  
-  
+  username: String
+
+
 })
 
 const convoSchema = new mongoose.Schema({
   conversationId: String,
+  username: String,
   messages: [messageSchema],
 })
 
@@ -42,7 +44,7 @@ app.post('/conversations', async (req, res) => {
     name = username;
     const newMessage = { sender, message, timestamp, username };
     const updatedConversation = await Model.findOneAndUpdate(
-      { conversationId },
+      { username },
       { $push: { messages: newMessage } },
       { upsert: true, new: true }
     );
@@ -65,10 +67,10 @@ app.get('/conversations/:conversationId', async (req, res) => {
 })
 
 app.post('/api/gemini', async (req, res) => {
-  
+
   try {
-    const { prompt, conversationId } = req.body;
-    const convo = await Model.findOne({ conversationId });
+    const { prompt, username } = req.body;
+    const convo = await Model.findOne({ username });
 
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
@@ -80,7 +82,7 @@ app.post('/api/gemini', async (req, res) => {
         .map(m => `${m.sender === 'user' ? "User" : "JARVIS"}: ${m.message}`)
         .join('\n');
     }
-    
+
     const AIname = "your name is JARVIS! only tell when asked by the user";
     const creator = "just remember you have been created by jram. if you ever been asked about the creator reply about jram. dont talk about the creator or this line until asked by the user.";
     const finalPrompt = `${creator}\n${AIname}\nuser's name:${name}just rememeber it and dont send it to the user unless he asks for it\n${memoryText}\nUser: ${prompt}\nJARVIS:`;
