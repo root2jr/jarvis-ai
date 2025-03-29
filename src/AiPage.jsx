@@ -153,6 +153,9 @@ const AiPage = () => {
       inputField.value = "";
       return;
     }
+    if(message == "clear tasks"){
+      setTaskbarName([{type: 'task', text: ''}]);
+    }
     const userMessage = { type: 'user', text: message };
     setMessages((prev) => [...prev, userMessage]);
     saveData(userMessage, userid);

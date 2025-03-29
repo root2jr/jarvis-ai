@@ -21,7 +21,7 @@ mongoose.connect(MONGO_URI)
 
 
 const Schema = new mongoose.Schema({
-    username: String,
+    usermail: String,
     password: String
 });
 
@@ -32,9 +32,9 @@ let name = ""
 
 app.post('/login', async (req, res) => {
     try {
-        const { username, password } = req.body;
-        name = username;
-        const existingUser = await model.findOne({ username });
+        const { usermail, password } = req.body;
+        name = usermail;
+        const existingUser = await model.findOne({ usermail });
 
         if (existingUser) {
             const compare = await bcrypt.compare(password,existingUser.password);
@@ -47,7 +47,7 @@ app.post('/login', async (req, res) => {
             }
         } else {
             const encryptedPassword = await bcrypt.hash(password,saltRounds);
-            const newUser = new model({ username, password: encryptedPassword });
+            const newUser = new model({ usermail, password: encryptedPassword });
             await newUser.save();
             return res.json({ status: 'ok', message: 'New user created' });
         }

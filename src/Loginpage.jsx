@@ -34,7 +34,7 @@ const Loginpage = () => {
         }
 
         const response = await axios.post('https://jarvis-ai-1.onrender.com/login', {
-            username: username,
+            usermail: usermail,
             password: password
         });
         console.log(response.data);
@@ -43,6 +43,7 @@ const Loginpage = () => {
         p.value = '';
 
         if (data.status === 'ok') {
+            fail.innerText = "NEW USER CREATED!"
             msg.classList.toggle('success');
             localStorage.setItem('token', response.data.token);
 
@@ -91,9 +92,9 @@ const Loginpage = () => {
 
                     {/* Add name attr & use 'new-username' to prevent Chrome from autofilling */}
                     <input
-                        type="text"
-                        name="username"
-                        placeholder="Username"
+                        type="mail"
+                        name=",ail"
+                        placeholder="Enter Your Mail ID"
                         autoComplete="new-username"
                         id='username'
                     />

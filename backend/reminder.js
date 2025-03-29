@@ -66,7 +66,6 @@ app.post("/tasks", async (req, res) => {
     if (!taskname) return res.status(400).send("Task name is required.");
     if (!deadline) return res.status(400).send("Deadline is required.");
 
-    // Attempt to convert deadline string into a Date object
     const parsedDeadline = new Date(deadline);
 
     if (isNaN(parsedDeadline.getTime())) {
@@ -131,15 +130,12 @@ cron.schedule('* * * * *', async () => {
 cron.schedule('* * * * *', async () => {
   const now = new Date();
 
-  // Convert UTC time to IST
   const istDate = new Date(
     now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })
   );
 
-  // Zero out seconds & milliseconds
   istDate.setSeconds(0, 0);
 
-  // Calculate the next minute in IST
   const nextMinute = new Date(istDate.getTime() + 60 * 1000);
 
   console.log("⏰ Checking tasks at IST:", istDate.toISOString());
