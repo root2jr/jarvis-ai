@@ -1,0 +1,57 @@
+.forgotpage{
+    width:100%;
+    height:100vh;
+    overflow: hidden;
+    font-family: 'Orbitron';
+}
+#bgVideo{
+    width:100%;
+    height:100vh;
+    object-fit: fill;
+    object-position: center;
+}
+.bg-layer{
+    position: absolute;
+    width: 100%;
+    height: 99vh;
+    z-index: 200;
+    margin-top: -100vh;
+    background-color: rgba(0, 0, 0, 0.74);
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    color:white;
+}
+.bg-layer input{
+    width:50%;
+    height:40px;
+    border-radius: 40px;
+    padding-left: 20px;
+    padding-right: 20px;
+    font-family: 'Orbitron';
+    margin-top: 30px;
+}
+.bg-layer input::placeholder{
+    color:white;
+}
+.bg-layer button{
+    width:150px;
+    height:50px;
+    border:1px solid white;
+    color:white;
+    background-color: transparent;
+    margin-top: 30px;
+    border-radius: 40px;
+    font-family: 'Orbitron';
+}
+.bg-layer button:hover{
+    background-color: skyblue;
+    border: none;
+    color:black;
+}
+#otp-head{
+    opacity: 0;
+}

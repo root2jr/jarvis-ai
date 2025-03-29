@@ -7,6 +7,7 @@ import ShinyText from './ShinyText';
 import Loginpage from './Loginpage';
 import AiPage from './AiPage';
 import ProtectedRoute from './ProtectedRoute';
+import Forgotpassword from './Forgotpassword';
 
 function Lander() {
   const navigate = useNavigate();
@@ -54,6 +55,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path='/forgotpassword' element={<Forgotpassword />} />
       </Routes>
     </Router>
   );

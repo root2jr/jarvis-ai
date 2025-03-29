@@ -140,3 +140,12 @@ input:-webkit-autofill:active {
 .success{
     transform: translateY(-350%);
 }
+.login-box a{
+    color: white;
+    font-size: 12px;
+    margin-top: 10px;
+    text-decoration: none;
+}
+.login-box a:hover{
+    text-decoration:underline;
+}

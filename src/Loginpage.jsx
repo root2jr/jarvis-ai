@@ -14,6 +14,9 @@ const Loginpage = () => {
         }, 2000)
     }
 
+    function forgot (){
+        navigate('/forgotpassword');
+    }
 
 
 
@@ -21,7 +24,7 @@ const Loginpage = () => {
         e.preventDefault();
         const msg = document.getElementById('msg');
         const fail = document.getElementById('fail');
-        let username = document.getElementById('username').value;
+        let usermail = document.getElementById('username').value;
         let password = document.getElementById('password').value;
         let span = document.getElementById('span');
         let u = document.getElementById('username');
@@ -33,7 +36,7 @@ const Loginpage = () => {
            return ;
         }
 
-        const response = await axios.post('https://jarvis-ai-1.onrender.com/login', {
+        const response = await axios.post('http://localhost:5000/login', {
             usermail: usermail,
             password: password
         });
@@ -107,7 +110,7 @@ const Loginpage = () => {
                         autoComplete="new-password"
                         id='password'
                     />
-
+                    <a href='' onClick={forgot}>Forgot Password?</a>
                     <button className="btn" onClick={sendData}>Login</button>
                 </div>
             </div>
