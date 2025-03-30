@@ -56,15 +56,7 @@ app.post('/conversations', async (req, res) => {
   }
 })
 
-app.get('/conversations/:conversationId', async (req, res) => {
-  try {
-    const convo = await Model.findOne({ conversationId: req.params.conversationId });
-    res.json(convo ? convo.messages : []);
-  } catch (error) {
-    console.error("Error fetching conversation:", error);
-    res.status(500).json({ error: 'Failed to fetch conversation' });
-  }
-})
+
 
 app.post('/api/gemini', async (req, res) => {
 
@@ -103,22 +95,41 @@ app.post('/api/gemini', async (req, res) => {
 
 
 
-app.get('/api/conversations/:username', async (req, res) => {
+app.get('/conversations/:username', async (req, res) => {
   const { username } = req.params;
 
   try {
-    const userConvo = await Model.findOne({ username });
-
+    const userConvo = await Model.findOne({ username: username });
+    console.log(username);
     if (!userConvo) {
       return res.status(404).json({ error: "User not found" });
     }
-
+    console.log(userConvo);
     res.json(userConvo);
   } catch (error) {
     console.error("Error fetching user conversation:", error);
     res.status(500).json({ error: "Server error" });
   }
 });
+
+app.post('/convoss/:username', async (req, res) => {
+  try {
+    const { username } = req.params;
+    const deleteConvo = await Model.findOneAndDelete({ username });
+
+    if (deleteConvo) {
+      console.log("Chat deleted successfully!");
+      res.status(200).json({ message: "Chat deleted successfully." });
+    } else {
+      console.log("No chat found to delete.");
+      res.status(404).json({ message: "No chat found for this user." });
+    }
+  } catch (error) {
+    console.error("Error deleting chat:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
 
 
 app.listen(PORT, () => {
