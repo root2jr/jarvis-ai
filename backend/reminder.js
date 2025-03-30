@@ -126,53 +126,46 @@ cron.schedule('* * * * *', async () => {
 });
 
 
-
-cron.schedule('* * * * *', async () => {
+cron.schedule('0 9 * * *', async () => {
   const now = new Date();
 
-  const istDate = new Date(
+  // Get current date in IST
+  const istNow = new Date(
     now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })
   );
 
-  istDate.setSeconds(0, 0);
-
-  const nextMinute = new Date(istDate.getTime() + 60 * 1000);
-
-  console.log("⏰ Checking tasks at IST:", istDate.toISOString());
+  const today = new Date(istNow.toDateString()); // midnight IST today
 
   try {
-    const dueTasks = await TaskModel.find({
+    const upcomingTasks = await TaskModel.find({
       deadline: {
-        $gte: istDate,
-        $lt: nextMinute,
+        $gte: today, // tasks due today or later
       },
     });
 
-    if (dueTasks.length === 0) {
-      console.log("✅ No tasks due this minute.");
+    if (upcomingTasks.length === 0) {
+      console.log("📆 No upcoming tasks today.");
       return;
     }
 
-    for (const task of dueTasks) {
-      const message = `🔔 Task Reminder: "${task.taskname}" is due now!`;
+    for (const task of upcomingTasks) {
+      const dueDate = new Date(task.deadline).toLocaleString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+      });
+
+      const message = `📌 Daily Reminder: Your task "${task.taskname}" is due on ${dueDate}`;
       try {
         await sendTelegramMessage(message);
-        console.log("📨 Reminder sent for task:", task.taskname);
+        console.log("📨 Daily reminder sent for:", task.taskname);
       } catch (err) {
-        console.error("❌ Error sending Telegram message:", err);
-      }
-
-      try {
-        await TaskModel.deleteOne({ _id: task._id });
-        console.log("🗑️ Task deleted:", task.taskname);
-      } catch (err) {
-        console.error("❌ Error deleting task:", err);
+        console.error("❌ Error sending daily Telegram reminder:", err);
       }
     }
   } catch (error) {
-    console.error("❌ Error fetching tasks:", error);
+    console.error("❌ Error in daily task reminder cron:", error);
   }
 });
+
 
 
 
