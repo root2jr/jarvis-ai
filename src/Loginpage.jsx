@@ -36,7 +36,7 @@ const Loginpage = () => {
            return ;
         }
 
-        const response = await axios.post('http://localhost:5000/login', {
+        const response = await axios.post('https://jarvis-ai-1.onrender.com/login', {
             usermail: usermail,
             password: password
         });
@@ -49,13 +49,14 @@ const Loginpage = () => {
             fail.innerText = "NEW USER CREATED!"
             msg.classList.toggle('success');
             localStorage.setItem('token', response.data.token);
-
+            localStorage.setItem('usersmail',response.data.usermail);
             successPage();
 
         }
         else if (data.status === 'login') {
             msg.classList.toggle('success');
             localStorage.setItem('token', response.data.token);
+            localStorage.setItem('usersmail',response.data.usermail);
 
             successPage();
 
