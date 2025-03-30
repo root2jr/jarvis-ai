@@ -102,6 +102,25 @@ app.post('/api/gemini', async (req, res) => {
 });
 
 
+
+app.get('/api/conversations/:username', async (req, res) => {
+  const { username } = req.params;
+
+  try {
+    const userConvo = await Model.findOne({ username });
+
+    if (!userConvo) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json(userConvo);
+  } catch (error) {
+    console.error("Error fetching user conversation:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+
 app.listen(PORT, () => {
   console.log('Server is Running Sucessfully!');
   console.log(`PORT:${PORT}`);

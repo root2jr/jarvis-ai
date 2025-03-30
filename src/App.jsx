@@ -8,9 +8,15 @@ import Loginpage from './Loginpage';
 import AiPage from './AiPage';
 import ProtectedRoute from './ProtectedRoute';
 import Forgotpassword from './Forgotpassword';
+import { useEffect } from 'react';
 
 function Lander() {
   const navigate = useNavigate();
+  useEffect(() => {
+         if(localStorage.getItem('token')){
+          navigate('/ai');
+         }
+    },[])
 
   return (
     <div className="lander">

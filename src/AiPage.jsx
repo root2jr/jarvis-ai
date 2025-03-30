@@ -7,11 +7,18 @@ import Tasks from './Tasks';
 
 const AiPage = () => {
  
+  
+  const usersname = localStorage.getItem('usersmail');
+  useEffect(() => {
+    console.log(usersname);
+ },[])
+
   const [name, setName] = useState('');
   const [taskbarName, setTaskbarName] = useState(() => {
     const stored = localStorage.getItem("tasks");
     return stored ? JSON.parse(stored) : [];
   });
+
   
   
   useEffect(() => {
@@ -48,15 +55,25 @@ const AiPage = () => {
 
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   const [userid, setUserid] = useState('');
-  const [messages, setMessages] = useState(() => {
-    const savedMessages = localStorage.getItem('messages');
-    return savedMessages
-      ? JSON.parse(savedMessages)
-      : [
-        { type: 'user', text: "Wake Up J.A.R.V.I.S, Daddy's Home" },
-        { type: 'bot', text: "Welcome Home Sir, What are we going to work on today?" },
-      ];
-  });
+  const [messages, setMessages] = useState([
+    { type: 'user', text: "Wake Up J.A.R.V.I.S, Daddy's Home" },
+    { type: 'bot', text: "Welcome Home Sir, What are we going to work on today?" },
+  ]);
+  
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const response = await axios.get(`https://jarvis-ai-8pr6.onrender.com/conversations/${usersname}`);
+        if (response.data) {
+          setMessages(response.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch saved messages:', err);
+      }
+    };
+    fetchMessages();
+  }, []);
+  
   const [loaderRef, setLoaderRef] = useState(false);
 
   const chatRef = useRef(null);
@@ -72,6 +89,7 @@ const AiPage = () => {
         sender: message.type,
         message: message.text,
         timestamp,
+        username: usersname,
         conversationId,
       })
     );
@@ -248,6 +266,7 @@ const AiPage = () => {
         const res = await axios.post('https://jarvis-ai-8pr6.onrender.com/api/gemini', {
           prompt: message,
           conversationId: userid,
+          username: usersname
         });
         let botMessageText = res.data.response.startsWith('JARVIS:')
           ? res.data.response.replace('JARVIS:', '')

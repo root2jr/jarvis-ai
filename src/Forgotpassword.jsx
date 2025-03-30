@@ -14,10 +14,13 @@ const Forgotpassword = () => {
     const sendEmail = async () => {
         if(newpass == 1){
             const newpassword =  document.getElementById('email').value;
-            const passchange = axios.post('http://localhost:5000/login',{
+            const passchange = axios.post('https://jarvis-ai-1.onrender.com/login',{
              usermail: mailName,
-             password: ''
+             password: newpassword,
+             change: 'yes'
             })
+            return ;
+        }
         const usermail = document.getElementById('email').value;
         setMailName(usermail);
         const userotp = document.getElementById('OTP').value;
@@ -35,7 +38,7 @@ const Forgotpassword = () => {
             }
         }
        
-        }
+        
         const otp = Math.floor(100000 + Math.random() * 900000);
         setFirstotp(otp);
         if (!usermail) {
@@ -47,7 +50,7 @@ const Forgotpassword = () => {
         console.log('Sending email...');
 
         try {
-            const response = await axios.post('http://localhost:5000/otp', {
+            const response = await axios.post('https://jarvis-ai-1.onrender.com/otp', {
                 usermail: usermail,
                 otp: otp,
             });
