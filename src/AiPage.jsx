@@ -10,6 +10,9 @@ const AiPage = () => {
 
   const usersname = localStorage.getItem('usersmail');
   useEffect(() => {
+    if (!usersname) {
+      localStorage.clear();
+    }
     console.log(usersname);
   }, [])
 
@@ -63,7 +66,7 @@ const AiPage = () => {
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/conversations/${usersname}`);
+        const res = await axios.get(`https://jarvis-ai-8pr6.onrender.com/conversations/${usersname}`);
         if (res) {
           if (Array.isArray(res.data.messages)) {
 
@@ -159,6 +162,26 @@ const AiPage = () => {
   const [taskName, setTaskName] = useState("");
 
 
+  function formatGeminiResponse(text) {
+    text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+    const lines = text.split('\n');
+    let formatted = '';
+
+    for (let line of lines) {
+      const trimmed = line.trim();
+
+      if (/^\* (?!\*)/.test(trimmed)) {
+        const cleanLine = trimmed.replace(/^\* (?!\*)/, '');
+        formatted += `<p class="fake-bullet">• ${cleanLine}</p>`;
+      } else {
+        formatted += `<p>${trimmed}</p>`;
+      }
+    }
+
+    return formatted;
+  }
+
 
 
 
@@ -196,35 +219,37 @@ const AiPage = () => {
 
 
     if (isTaskMessage(message)) {
-      setMessages((prev) => [...prev, { message: "Use 'Tick:' in your prompt, So What actually is your task?" }]);
+      setMessages((prev) => [...prev, { message: "Use 'Task:' in your prompt, So What actually is your task?" }]);
       inputField.value = ""
+      const botMessage = { sender: 'bot', message: "Use 'Task:' in your prompt, So When actually is your Deadline?" };
+      saveData(botMessage, userid)
     }
 
 
 
 
-    else if (message.toLowerCase().includes('tick:')) {
+    else if (message.toLowerCase().includes('task:')) {
       const tName = message.slice(5).trim();
       setTaskName(tName);
       setTaskbarName((prev) => [...prev, { type: 'task', message: tName }]);
       console.log(taskbarName);
       setMessages((prev) => [...prev, { message: "Use 'Deadline:' in your prompt, So When actually is your Deadline?" }]);
       inputField.value = ""
+      const botMessage = { sender: 'bot', message: "Use 'Deadline:' in your prompt, So When actually is your Deadline?" };
+      saveData(botMessage, userid)
     }
     else if (message.toLowerCase().includes("deadline:")) {
       const deadline = message.slice(9).trim();
       const saveTaskdeadline = await axios.post("https://jarvis-ai-2.onrender.com/tasks", {
         taskname: taskName,
-        deadline: deadline
+        deadline: deadline,
+        userid: userid
       })
       setMessages((prev) => [...prev, { message: "Task Added Successfully!" }]);
       inputField.value = ""
+      const botMessage = { sender: 'bot', message: "Task Added Successfully!" };
+      saveData(botMessage, userid)
     }
-
-
-
-
-
 
 
     else if (message.toLowerCase().includes('name:')) {
@@ -238,6 +263,8 @@ const AiPage = () => {
       });
       const remdata = sendReminder.data;
       console.log(remdata)
+      const botMessage = { sender: 'bot', message: "Use 'Time:' before the prompt! Time:" };
+      saveData(botMessage, userid)
     }
     else if (message.toLowerCase().includes('time:')) {
       const kamma = message.slice(5).trim();
@@ -249,7 +276,9 @@ const AiPage = () => {
         time: kamma
       });
       const remdata = sendReminder.data;
-      console.log(remdata)
+      console.log(remdata);
+      const botMessage = { sender: 'bot', message: "Reminder is Set!" };
+      saveData(botMessage, userid)
 
     }
 
@@ -263,7 +292,9 @@ const AiPage = () => {
       console.log("Reminder Detected");
       let reminderName = "Use 'Name:' before the prompt What's the Reminder for?";
       setMessages((prev) => [...prev, { message: reminderName }]);
-      inputField.value = ""
+      inputField.value = "";
+      const botMessage = { sender: 'bot', message: "Reminder is Set!" };
+      saveData(botMessage, userid);
     }
 
     else {
@@ -277,6 +308,7 @@ const AiPage = () => {
         let botMessageText = res.data.response.startsWith('JARVIS:')
           ? res.data.response.replace('JARVIS:', '')
           : res.data.response;
+        botMessageText = formatGeminiResponse(botMessageText);
         const botMessage = { sender: 'bot', message: botMessageText };
         setMessages((prev) => [...prev, botMessage]);
         saveData(botMessage, userid);
@@ -346,7 +378,7 @@ const AiPage = () => {
   };
 
   const resetChat = async () => {
-    const deletechat = await axios.post(`http://localhost:5000/convoss/${usersname}`)
+    const deletechat = await axios.post(`https://jarvis-ai-8pr6.onrender.com/convoss/${usersname}`)
     setMessages([
       { sender: 'user', message: "Wake Up J.A.R.V.I.S, Daddy's Home" },
       { sender: 'bot', message: "Welcome Home Sir, What are we going to work on today?" },
@@ -412,10 +444,10 @@ const AiPage = () => {
         </div>
 
         <div className='chat' ref={chatRef}>
-        <ul className='chat-list'>
+          <ul className='chat-list'>
             {messages.map((msg, index) => (
               <li key={index} className={msg.sender}>
-                {msg.message}
+                <span dangerouslySetInnerHTML={{ __html: msg.message }} />
               </li>
             ))}
 
