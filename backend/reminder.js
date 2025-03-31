@@ -3,14 +3,15 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import cron from 'node-cron';
-import axios from 'axios';
+import admin from "firebase-admin";
+import fs from "fs";
 
 dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const { MONGO_URI, PORT, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID } = process.env;
+const { MONGO_URI, PORT, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, FIRE_PASS } = process.env;
 
 mongoose.connect(MONGO_URI)
   .then(() => console.log("MongoDB Connected"))
@@ -19,6 +20,7 @@ mongoose.connect(MONGO_URI)
 const reminderSchema = new mongoose.Schema({
   name: String,
   time: String,
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 });
 const Reminder = mongoose.model("Reminder", reminderSchema);
 
@@ -28,22 +30,26 @@ app.get("/", (req, res) => {
 
 app.post("/reminders", async (req, res) => {
   try {
-    const { name, time } = req.body;
+    const { name, time, userId } = req.body;  
 
-    if (!name) return res.status(400).send("Reminder name is required.");
+    if (!name || !time || !userId) {
+      return res.status(400).send("Reminder name, time, and userId are required.");
+    }
+
     const updatedReminder = await Reminder.findOneAndUpdate(
-      { name },
-      { time },
+      { name, userId }, 
+      { time, userId },
       { upsert: true, new: true }
     );
 
-    console.log(" Reminder Saved:", updatedReminder);
+    console.log("✅ Reminder Saved:", updatedReminder);
     res.send("Reminder Saved Successfully!");
   } catch (error) {
-    console.error(" Error Saving Reminder:", error);
+    console.error("❌ Error Saving Reminder:", error);
     res.status(500).send("Server Error");
   }
 });
+
 
 
 const TaskSchema = new mongoose.Schema({
@@ -87,17 +93,22 @@ app.post("/tasks", async (req, res) => {
     res.status(500).send("Server Error");
   }
 });
+const sendPushNotification = async (title, body, token) => {
+  if (!token) {
+    console.error("❌ No FCM token provided.");
+    return;
+  }
 
-const sendTelegramMessage = async (text) => {
+  const message = {
+    notification: { title, body },
+    token,
+  };
+
   try {
-    const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
-    await axios.post(url, {
-      chat_id: TELEGRAM_CHAT_ID,
-      text,
-    });
-    console.log(" Telegram message sent.");
-  } catch (err) {
-    console.error("Telegram message failed:", err.message);
+    await admin.messaging().send(message);
+    console.log("📨 Push notification sent successfully!");
+  } catch (error) {
+    console.error("❌ Error sending push notification:", error);
   }
 };
 
@@ -116,14 +127,25 @@ cron.schedule('* * * * *', async () => {
 
     for (const rem of dueReminders) {
       const message = `Reminder: ${rem.name}!`;
-      await sendTelegramMessage(message);
+      
+      // Get the user's FCM token (Assuming each reminder is linked to a user)
+      const user = await User.findById(rem.userId);
+      if (!user || !user.fcmToken) {
+        console.warn(`⚠️ No FCM token found for user of reminder: ${rem.name}`);
+        continue;
+      }
 
+      // Send push notification
+      await sendPushNotification("JARVIS Reminder", message, user.fcmToken);
+
+      // Delete the reminder after sending notification
       await Reminder.findByIdAndDelete(rem._id);
     }
   } catch (error) {
     console.error("❌ Error Checking Reminders:", error);
   }
 });
+
 
 
 cron.schedule('0 9 * * *', async () => {
@@ -166,8 +188,17 @@ cron.schedule('0 9 * * *', async () => {
   }
 });
 
+app.get('/ping', (req, res) => {
+  res.status(200).send('JARVIS is online ✅');
+});
 
 
+
+const serviceAccount = JSON.parse(fs.readFileSync( `${FIRE_PASS}`, "utf8"));
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
 
 
 
