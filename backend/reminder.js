@@ -194,6 +194,7 @@ app.get('/ping', (req, res) => {
 
 
 const serviceAccount = JSON.parse(process.env.FIRE_PASS);
+serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, "\n");
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
