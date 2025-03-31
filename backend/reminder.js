@@ -193,8 +193,7 @@ app.get('/ping', (req, res) => {
 });
 
 
-
-const serviceAccount = JSON.parse(fs.readFileSync( `${FIRE_PASS}`, "utf8"));
+const serviceAccount = JSON.parse(process.env.FIRE_PASS);
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
