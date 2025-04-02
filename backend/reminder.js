@@ -4,11 +4,32 @@ import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import cron from 'node-cron';
 import axios from 'axios';
+import { createServer } from 'http'; 
+import { Server } from "socket.io";
 
 dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+const server = createServer(app); // Attach HTTP server to Express
+const io = new Server(server, {
+  cors: { origin: "*" },
+});
+
+app.use(cors());
+app.use(express.json());
+
+io.on("connection", (socket) => {
+  console.log("🔥 A user connected");
+
+  socket.on("disconnect", () => {
+    console.log("❌ User disconnected");
+});
+});
+
+// ✅ Attach Socket.io to the server
+
 
 const { MONGO_URI, PORT, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID } = process.env;
 
@@ -17,8 +38,11 @@ mongoose.connect(MONGO_URI)
   .catch((error) => console.error(" MongoDB Connection Failed:", error));
 
 const reminderSchema = new mongoose.Schema({
-  name: String,
-  time: String,
+  _id: { type: mongoose.Schema.Types.ObjectId, auto: true },
+  username: String,
+  intent: String,
+  datetime: Date,
+  task: String,
 });
 const Reminder = mongoose.model("Reminder", reminderSchema);
 
@@ -26,16 +50,22 @@ app.get("/", (req, res) => {
   res.send(" JARVIS Reminder Backend is Live!");
 });
 
+
+let usersname = "";
+
 app.post("/reminders", async (req, res) => {
   try {
-    const { name, time } = req.body;
+    const { username, datetime, intent, task } = req.body;
+    usersname = username;
 
-    if (!name) return res.status(400).send("Reminder name is required.");
-    const updatedReminder = await Reminder.findOneAndUpdate(
-      { name },
-      { time },
-      { upsert: true, new: true }
-    );
+    if (!username) return res.status(400).send("Reminder name is required.");
+    const updatedReminder = await new Reminder({
+      username,
+      datetime,
+      intent,
+      task
+    });
+    await updatedReminder.save();
 
     console.log(" Reminder Saved:", updatedReminder);
     res.send("Reminder Saved Successfully!");
@@ -47,8 +77,10 @@ app.post("/reminders", async (req, res) => {
 
 
 const TaskSchema = new mongoose.Schema({
-  taskname: String,
-  deadline: Date,
+  username: String,
+  intent: String,
+  datetime: Date,
+  task: String,
 })
 
 const TaskModel = mongoose.model("Task", TaskSchema)
@@ -61,24 +93,19 @@ const TaskModel = mongoose.model("Task", TaskSchema)
 
 app.post("/tasks", async (req, res) => {
   try {
-    const { taskname, deadline } = req.body;
-   
-    if (!taskname) return res.status(400).send("Task name is required.");
-    if (!deadline) return res.status(400).send("Deadline is required.");
+      const { username, datetime, intent, task } = req.body;
+      usersname = username;
+  
+      if (!username) return res.status(400).send("Reminder name is required.");
+      const updatedTask = await new TaskModel({
+        username,
+        datetime,
+        intent,
+        task
+      });
+      await updatedTask.save();
+  
 
-    const parsedDeadline = new Date(deadline);
-
-    if (isNaN(parsedDeadline.getTime())) {
-      return res.status(400).send("Invalid deadline format.");
-    }
-
-    const updatedTask = await TaskModel.findOneAndUpdate(
-      { taskname },
-      { deadline: parsedDeadline },
-      { upsert: true, new: true }
-    );
-
-    
 
     console.log(" Task Added:", updatedTask);
     res.send("Task Added");
@@ -101,21 +128,24 @@ const sendTelegramMessage = async (text) => {
   }
 };
 
-cron.schedule('* * * * *', async () => {
-  const currentISTTime = new Date().toLocaleTimeString('en-IN', {
-    timeZone: 'Asia/Kolkata',
-    hour12: false,
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+cron.schedule("* * * * *", async () => {
+  const now = new Date();
+  now.setSeconds(0);
+  now.setMilliseconds(0);
 
-  console.log(`⏰ Cron Job running at IST ${currentISTTime}`);
+  const end = new Date(now);
+  end.setSeconds(59);
+
+  console.log(`⏰ Cron Job running at IST ${now.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' })}`);
 
   try {
-    const dueReminders = await Reminder.find({ time: currentISTTime });
+    const dueReminders = await Reminder.find({
+      datetime: { $gte: now, $lte: end } 
+    });
 
     for (const rem of dueReminders) {
-      const message = `Reminder: ${rem.name}!`;
+      const message = `Reminder: ${rem.task}`;
+      io.emit("reminder", { task: rem.task });
       await sendTelegramMessage(message);
 
       await Reminder.findByIdAndDelete(rem._id);
@@ -125,23 +155,20 @@ cron.schedule('* * * * *', async () => {
   }
 });
 
-
 cron.schedule('0 9 * * *', async () => {
-  const now = new Date();
+  console.log("🕘 Daily Task Reminder Cron Triggered!");
 
-  // Get current date in IST
-  const istNow = new Date(
-    now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })
-  );
-
-  const today = new Date(istNow.toDateString()); // midnight IST today
+  const istNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+  const today = new Date(istNow.toDateString());
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
 
   try {
     const upcomingTasks = await TaskModel.find({
-      deadline: {
-        $gte: today, // tasks due today or later
-      },
+      datetime: { $gte: today, $lt: tomorrow },
     });
+
+    console.log('✅ Cron is checking for tasks');
 
     if (upcomingTasks.length === 0) {
       console.log("📆 No upcoming tasks today.");
@@ -149,14 +176,14 @@ cron.schedule('0 9 * * *', async () => {
     }
 
     for (const task of upcomingTasks) {
-      const dueDate = new Date(task.deadline).toLocaleString('en-IN', {
+      const dueDate = new Date(task.datetime).toLocaleString('en-IN', {
         timeZone: 'Asia/Kolkata',
       });
 
-      const message = `📌 Daily Reminder: Your task "${task.taskname}" is due on ${dueDate}`;
+      const message = `📌 Daily Reminder: Your task "${task.task}" is due on ${dueDate}`;
       try {
         await sendTelegramMessage(message);
-        console.log("📨 Daily reminder sent for:", task.taskname);
+        console.log("📨 Daily reminder sent for:", task.task);
       } catch (err) {
         console.error("❌ Error sending daily Telegram reminder:", err);
       }
@@ -166,11 +193,6 @@ cron.schedule('0 9 * * *', async () => {
   }
 });
 
-
-
-
-
-
-app.listen(PORT, () => {
-  console.log(`Server running on PORT ${PORT}`);
+server.listen(PORT, () => {
+  console.log(`🚀 Server running on PORT ${PORT}`);
 });

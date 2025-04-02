@@ -4,9 +4,25 @@ import aiBg from './4872-181170832.mp4';
 import axios from 'axios';
 import jarvisLogo from './jarvis-logo.jpg';
 import Tasks from './Tasks';
+import * as chrono from "chrono-node";
+import { io } from 'socket.io-client'
+
 
 const AiPage = () => {
 
+  const socket = io("http://localhost:5000/");
+  socket.on("connect", () => {
+    console.log("✅ WebSocket connected:", socket.id);
+  });
+  
+  socket.on("reminder", (data) => {
+    console.log("🔔 Reminder Received:", data.task);
+    speakReminder(`Reminder: ${data.task}`);
+  });
+  
+  socket.on("disconnect", () => {
+    console.log("❌ WebSocket disconnected");
+  });
 
   const usersname = localStorage.getItem('usersmail');
   useEffect(() => {
@@ -163,7 +179,7 @@ const AiPage = () => {
 
 
   function formatGeminiResponse(text) {
-    text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    text = text.replace(/\*\*(.*?)\*\*/g, '<strong class="strong">$1</strong>');
 
     const lines = text.split('\n');
     let formatted = '';
@@ -182,6 +198,67 @@ const AiPage = () => {
     return formatted;
   }
 
+
+
+
+function parseReminder(text) {
+    let intent = "reminder"; 
+    let task = "";
+    let datetime = null;
+
+    const parsedDate = chrono.parseDate(text);
+    console.log(parsedDate);
+    if (parsedDate) {
+        datetime = parsedDate.toISOString();
+        const chronoResult = chrono.parse(text);
+        console.log(chronoResult);
+        if (chronoResult.length > 0) {
+            text = text.replace(chronoResult[0].text, "").trim(); 
+        }
+    }
+
+    task = text.replace(/remind me to|set me a reminder to|alert me about|remind me that/, "").trim();
+    
+    console.log({intent, task, datetime});
+    return { intent, task, datetime };
+}
+function parseTasks(text) {
+    let intent = "task"; 
+    let task = "";
+    let datetime = null;
+
+    const parsedDate = chrono.parseDate(text);
+    console.log(parsedDate);
+    if (parsedDate) {
+        datetime = parsedDate.toISOString();
+        const chronoResult = chrono.parse(text);
+        console.log(chronoResult);
+        if (chronoResult.length > 0) {
+            text = text.replace(chronoResult[0].text, "").trim(); 
+        }
+    }
+
+    task = text.replace(/"add task|note down|remember to |schedule me/, "").trim();
+    
+    console.log({intent, task, datetime});
+    return { intent, task, datetime };
+}
+
+const speakReminder = (text) => {
+  if ('speechSynthesis' in window) {
+    enterFullPowerMode();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+
+    utterance.onend = () => {
+      console.log("Entering Full-Power Mode: Listening for 'Stop JARVIS'...");
+    };
+
+    speechSynthesis.speak(utterance);
+  } else {
+    console.error("Speech Synthesis not supported.");
+  }
+};
 
 
 
@@ -219,9 +296,19 @@ const AiPage = () => {
 
 
     if (isTaskMessage(message)) {
-      setMessages((prev) => [...prev, { message: "Use 'Task:' in your prompt, So What actually is your task?" }]);
+      
+     const parsedmessa = parseTasks(message);
+      const saveTaskdeadline = await axios.post("http://localhost:5000/tasks", {
+        username: usersname,
+        intent: parsedmessa.intent,
+        datetime: parsedmessa.datetime,
+        task: parsedmessa.task
+      })
+      setTaskName(parsedmessa.task);
+      setTaskbarName((prev) => [...prev, { type: 'task', message: parsedmessa.task }]);
       inputField.value = ""
-      const botMessage = { sender: 'bot', message: "Use 'Task:' in your prompt, So When actually is your Deadline?" };
+      setMessages((prev) => [...prev, { message: "Task Added Successfully!" }]);
+      const botMessage = { sender: 'bot', message: "Task Added Successfully!" };
       saveData(botMessage, userid)
     }
 
@@ -252,36 +339,7 @@ const AiPage = () => {
     }
 
 
-    else if (message.toLowerCase().includes('name:')) {
-      const summa = message.slice(5).trim();
-      setReminderName(message.slice(5).trim());
-      setMessages((prev) => [...prev, { message: "Use 'Time:' before the prompt! Time:" }]);
-      inputField.value = "";
-      const sendReminder = await axios.post("https://jarvis-ai-2.onrender.com/reminders", {
-        name: summa,
-        time: "",
-      });
-      const remdata = sendReminder.data;
-      console.log(remdata)
-      const botMessage = { sender: 'bot', message: "Use 'Time:' before the prompt! Time:" };
-      saveData(botMessage, userid)
-    }
-    else if (message.toLowerCase().includes('time:')) {
-      const kamma = message.slice(5).trim();
-      setReminderTime(message.slice(5).trim());
-      setMessages((prev) => [...prev, { message: "Reminder is Set!" }]);
-      inputField.value = ""
-      const sendReminder = await axios.post("https://jarvis-ai-2.onrender.com/reminders", {
-        name: reminderName,
-        time: kamma
-      });
-      const remdata = sendReminder.data;
-      console.log(remdata);
-      const botMessage = { sender: 'bot', message: "Reminder is Set!" };
-      saveData(botMessage, userid)
-
-    }
-
+  
 
 
 
@@ -290,11 +348,17 @@ const AiPage = () => {
 
     else if (isReminderMessage(message)) {
       console.log("Reminder Detected");
-      let reminderName = "Use 'Name:' before the prompt What's the Reminder for?";
-      setMessages((prev) => [...prev, { message: reminderName }]);
+      const parsedmess = parseReminder(message);
+      const sendReminder = await axios.post("http://localhost:5000/reminders", {
+        username: usersname,
+        intent: parsedmess.intent,
+        datetime: parsedmess.datetime,
+        task: parsedmess.task
+      });
       inputField.value = "";
       const botMessage = { sender: 'bot', message: "Reminder is Set!" };
       saveData(botMessage, userid);
+      setMessages((prev) => [...prev, { message: "Reminder is Set!" }]);
     }
 
     else {
@@ -322,60 +386,82 @@ const AiPage = () => {
   };
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   const startListening = () => {
     const recognition = new SpeechRecognition();
     recognition.lang = 'en-US';
     recognition.interimResults = false;
+    recognition.continuous = true; 
     recognition.maxAlternatives = 1;
 
     recognition.start();
 
     recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      document.getElementById('input').value = transcript;
-      getResponse();
+        const transcript = event.results[0][0].transcript.toLowerCase().trim();
+        console.log("Heard:", transcript);
+
+        if (transcript.includes("hey jarvis")) {
+            console.log("Wake word detected! Switching to Full-Power Mode.");
+            enterFullPowerMode();
+        } else if (transcript.includes("stop jarvis")) {
+            console.log("Stopping JARVIS voice...");
+            stopSpeaking();
+        } else {
+            document.getElementById('input').value = transcript;
+            getResponse();
+        }
     };
 
     recognition.onerror = (event) => {
-      console.error('Speech recognition error:', event.error);
+        console.error("Speech recognition error:", event.error);
     };
+
+    recognition.onend = () => {
+        console.log("Speech recognition stopped. Restarting...");
+        startListening(); 
+    };
+};
+
+const enterFullPowerMode = () => {
+  console.log("Entering Full-Power Mode...");
+
+  const recognition = new SpeechRecognition();
+  recognition.lang = 'en-US';
+  recognition.interimResults = false;
+  recognition.continuous = true;
+  recognition.maxAlternatives = 1;
+
+  recognition.start();
+
+  recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript.toLowerCase().trim();
+      console.log("Full-Power Mode Heard:", transcript);
+
+      if (transcript.includes("stop jarvis")) {
+          console.log("Stopping JARVIS voice...");
+          stopSpeaking();
+      } else {
+          document.getElementById('input').value = transcript;
+          getResponse();
+      }
   };
+
+  recognition.onerror = (event) => {
+      console.error("Full-Power Mode error:", event.error);
+  };
+
+  recognition.onend = () => {
+      console.log("Full-Power Mode stopped. Restarting Low-Power Mode...");
+      startListening(); 
+  };
+};
+
+const stopSpeaking = () => {
+  if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+      console.log("JARVIS Voice Stopped.");
+  }
+};
+
 
   const resetChat = async () => {
     const deletechat = await axios.post(`https://jarvis-ai-8pr6.onrender.com/convoss/${usersname}`)
