@@ -7,22 +7,65 @@ import Tasks from './Tasks';
 import * as chrono from "chrono-node";
 import { io } from 'socket.io-client'
 
+const socket = io("http://localhost:5000/");
+
 
 const AiPage = () => {
 
-  const socket = io("http://localhost:5000/");
-  socket.on("connect", () => {
-    console.log("✅ WebSocket connected:", socket.id);
-  });
-  
-  socket.on("reminder", (data) => {
-    console.log("🔔 Reminder Received:", data.task);
-    speakReminder(`Reminder: ${data.task}`);
-  });
-  
-  socket.on("disconnect", () => {
-    console.log("❌ WebSocket disconnected");
-  });
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/background.js')
+            .then(reg => console.log('✅ Service Worker Registered:', reg))
+            .catch(err => console.error('❌ Service Worker Error:', err));
+    }
+
+    const channel = new BroadcastChannel('jarvis_channel');
+    channel.onmessage = (event) => {
+        if (event.data.type === 'speak') {
+            speak(event.data.text);
+        }
+    };
+    socket.on("reminder_audio", (data) => {
+      const { filename } = data;
+      console.log(data);
+      const audio = new Audio(filename);
+    
+      let playCount = 0; // 🔢 Track how many times it played
+      const maxPlays = 5; // 🔁 Play it 5 times
+    
+      const playAudio = () => {
+        if (playCount < maxPlays) {
+          audio.currentTime = 0; // ⏪ Reset audio position
+          audio.play()
+            .then(() => console.log(`🎵 Playing reminder audio... (${playCount + 1}/${maxPlays})`))
+            .catch(err => console.error("❌ Error playing audio:", err));
+          
+          playCount++; // ➕ Increase play count
+        } else {
+          console.log(`✅ Audio played ${maxPlays} times.`);
+        }
+      };
+    
+      // 🔄 Play the first time
+      playAudio();
+    
+      // 🔁 Loop until it reaches 5 plays
+      audio.onended = () => {
+        if (playCount < maxPlays) {
+          playAudio();
+        } else {
+          console.log(`🗑 Audio file ${filename} played 5 times.`);
+        }
+      };
+    });
+    
+
+    return () => {
+      channel.close();
+      socket.off("reminder_audio");
+    };
+  }, []); 
+
 
   const usersname = localStorage.getItem('usersmail');
   useEffect(() => {
@@ -62,6 +105,28 @@ const AiPage = () => {
   useEffect(() => {
     localStorage.setItem("tasks", JSON.stringify(taskbarName));
   }, [taskbarName]);
+
+  function keepAudioAlive() {
+    navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(stream => {
+        const audioContext = new AudioContext();
+        const source = audioContext.createMediaStreamSource(stream);
+        source.connect(audioContext.destination); // Keeps WebRTC alive
+    })
+    .catch(err => console.error('Mic Access Denied:', err));
+}
+
+function speak(text) {
+  if (navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({ type: 'speak', text });
+  } else {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1; 
+      utterance.pitch = 1;
+      utterance.volume = 1;
+      window.speechSynthesis.speak(utterance);
+  }
+}
 
 
 
@@ -244,21 +309,7 @@ function parseTasks(text) {
     return { intent, task, datetime };
 }
 
-const speakReminder = (text) => {
-  if ('speechSynthesis' in window) {
-    enterFullPowerMode();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'en-US';
 
-    utterance.onend = () => {
-      console.log("Entering Full-Power Mode: Listening for 'Stop JARVIS'...");
-    };
-
-    speechSynthesis.speak(utterance);
-  } else {
-    console.error("Speech Synthesis not supported.");
-  }
-};
 
 
 
@@ -298,7 +349,7 @@ const speakReminder = (text) => {
     if (isTaskMessage(message)) {
       
      const parsedmessa = parseTasks(message);
-      const saveTaskdeadline = await axios.post("http://localhost:5000/tasks", {
+      const saveTaskdeadline = await axios.post("https://jarvis-ai-2.onrender.com/tasks", {
         username: usersname,
         intent: parsedmessa.intent,
         datetime: parsedmessa.datetime,
@@ -311,45 +362,13 @@ const speakReminder = (text) => {
       const botMessage = { sender: 'bot', message: "Task Added Successfully!" };
       saveData(botMessage, userid)
     }
-
-
-
-
-    else if (message.toLowerCase().includes('task:')) {
-      const tName = message.slice(5).trim();
-      setTaskName(tName);
-      setTaskbarName((prev) => [...prev, { type: 'task', message: tName }]);
-      console.log(taskbarName);
-      setMessages((prev) => [...prev, { message: "Use 'Deadline:' in your prompt, So When actually is your Deadline?" }]);
-      inputField.value = ""
-      const botMessage = { sender: 'bot', message: "Use 'Deadline:' in your prompt, So When actually is your Deadline?" };
-      saveData(botMessage, userid)
-    }
-    else if (message.toLowerCase().includes("deadline:")) {
-      const deadline = message.slice(9).trim();
-      const saveTaskdeadline = await axios.post("https://jarvis-ai-2.onrender.com/tasks", {
-        taskname: taskName,
-        deadline: deadline,
-        userid: userid
-      })
-      setMessages((prev) => [...prev, { message: "Task Added Successfully!" }]);
-      inputField.value = ""
-      const botMessage = { sender: 'bot', message: "Task Added Successfully!" };
-      saveData(botMessage, userid)
-    }
-
-
   
-
-
-
-
 
 
     else if (isReminderMessage(message)) {
       console.log("Reminder Detected");
       const parsedmess = parseReminder(message);
-      const sendReminder = await axios.post("http://localhost:5000/reminders", {
+      const sendReminder = await axios.post("https://jarvis-ai-2.onrender.com/reminders", {
         username: usersname,
         intent: parsedmess.intent,
         datetime: parsedmess.datetime,

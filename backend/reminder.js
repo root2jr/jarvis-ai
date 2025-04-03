@@ -4,28 +4,36 @@ import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import cron from 'node-cron';
 import axios from 'axios';
-import { createServer } from 'http'; 
+import { createServer } from 'http';
 import { Server } from "socket.io";
+import { exec } from "child_process";
+import path from 'path';
+import fs from 'fs'
+
+
 
 dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const server = createServer(app); // Attach HTTP server to Express
+
+const __dirname = path.resolve(); // Needed for ES modules
+app.use('/audio', express.static(path.join(__dirname, 'public')));
+
+const server = createServer(app);
 const io = new Server(server, {
   cors: { origin: "*" },
 });
 
-app.use(cors());
-app.use(express.json());
+
 
 io.on("connection", (socket) => {
   console.log("🔥 A user connected");
 
   socket.on("disconnect", () => {
     console.log("❌ User disconnected");
-});
+  });
 });
 
 // ✅ Attach Socket.io to the server
@@ -93,18 +101,18 @@ const TaskModel = mongoose.model("Task", TaskSchema)
 
 app.post("/tasks", async (req, res) => {
   try {
-      const { username, datetime, intent, task } = req.body;
-      usersname = username;
-  
-      if (!username) return res.status(400).send("Reminder name is required.");
-      const updatedTask = await new TaskModel({
-        username,
-        datetime,
-        intent,
-        task
-      });
-      await updatedTask.save();
-  
+    const { username, datetime, intent, task } = req.body;
+    usersname = username;
+
+    if (!username) return res.status(400).send("Reminder name is required.");
+    const updatedTask = await new TaskModel({
+      username,
+      datetime,
+      intent,
+      task
+    });
+    await updatedTask.save();
+
 
 
     console.log(" Task Added:", updatedTask);
@@ -128,32 +136,61 @@ const sendTelegramMessage = async (text) => {
   }
 };
 
+
+
 cron.schedule("* * * * *", async () => {
   const now = new Date();
   now.setSeconds(0);
   now.setMilliseconds(0);
-
-  const end = new Date(now);
-  end.setSeconds(59);
-
+  
   console.log(`⏰ Cron Job running at IST ${now.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' })}`);
 
   try {
     const dueReminders = await Reminder.find({
-      datetime: { $gte: now, $lte: end } 
+      datetime: { $gte: now, $lte: new Date(now.getTime() + 59000) }
     });
 
     for (const rem of dueReminders) {
       const message = `Reminder: ${rem.task}`;
       io.emit("reminder", { task: rem.task });
+
       await sendTelegramMessage(message);
 
-      await Reminder.findByIdAndDelete(rem._id);
-    }
+      // ✅ Save file in the correct location
+      const filename = `reminder_${rem._id}.mp3`;
+      const filePath = path.join(__dirname, 'public', filename);
+      
+      const command = `python voice_generator.py "${message}" "${filePath.replace(/\\/g, "/")}"`;
+      exec(command, (error) => {
+        if (error) {
+          console.error("❌ Error generating speech:", error);
+          return;
+        }
+
+        const fileUrl = `http://localhost:5000/audio/${filename}`;
+        io.emit("reminder_audio", { filename: fileUrl });
+        console.log("✅ Reminder Audio Sent!", fileUrl);
+
+        Reminder.findByIdAndDelete(rem._id)
+          .then(() => console.log("🗑 Reminder deleted"))
+          .catch((err) => console.error("❌ Error deleting reminder:", err));
+        });
+        scheduleFileDeletion(filePath, filename);
+      }
+      
   } catch (error) {
     console.error("❌ Error Checking Reminders:", error);
   }
 });
+
+function scheduleFileDeletion(filePath, filename) {
+  setTimeout(() => {
+    fs.unlink(filePath, (err) => {
+      if (err) console.error(`❌ Error deleting file ${filename}:`, err);
+      else console.log(`🗑 File deleted: ${filename}`);
+    });
+  }, 30000); // ⏳ 30 seconds
+}
 
 cron.schedule('0 9 * * *', async () => {
   console.log("🕘 Daily Task Reminder Cron Triggered!");
