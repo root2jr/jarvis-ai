@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './AiPage.css';
-import aiBg from './4872-181170832.mp4';
+import aiBg from './ai-bg.mp4';
 import axios from 'axios';
 import jarvisLogo from './jarvis-logo.jpg';
 import Tasks from './Tasks';
