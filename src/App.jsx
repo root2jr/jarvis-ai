@@ -21,7 +21,7 @@ function Lander() {
   }, [])
 
   const video = document.createElement('video');
-  video.src = './bg.mp4';
+  video.src = './bg3.mp4';
   video.preload = 'auto';
   video.load();  
 
