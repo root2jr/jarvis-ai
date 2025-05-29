@@ -20,6 +20,12 @@ function Lander() {
     }
   }, [])
 
+  const video = document.createElement('video');
+  video.src = './bg.mp4';
+  video.preload = 'auto';
+  video.load();  
+
+
   return (
     <div className="lander">
       <video autoPlay loop muted>

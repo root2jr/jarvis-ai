@@ -1,78 +1,23 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './AiPage.css';
-import aiBg from './ai-bg.mp4';
+import aiBg from './bg.mp4';
 import axios from 'axios';
 import jarvisLogo from './jarvis-logo.jpg';
 import Tasks from './Tasks';
 import * as chrono from "chrono-node";
-import { io } from 'socket.io-client'
-
-const socket = io("http://localhost:5000/");
 
 
 const AiPage = () => {
 
-  useEffect(() => {
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/background.js')
-            .then(reg => console.log('✅ Service Worker Registered:', reg))
-            .catch(err => console.error('❌ Service Worker Error:', err));
-    }
-
-    const channel = new BroadcastChannel('jarvis_channel');
-    channel.onmessage = (event) => {
-        if (event.data.type === 'speak') {
-            speak(event.data.text);
-        }
-    };
-    socket.on("reminder_audio", (data) => {
-      const { filename } = data;
-      console.log(data);
-      const audio = new Audio(filename);
-    
-      let playCount = 0; // 🔢 Track how many times it played
-      const maxPlays = 5; // 🔁 Play it 5 times
-    
-      const playAudio = () => {
-        if (playCount < maxPlays) {
-          audio.currentTime = 0; // ⏪ Reset audio position
-          audio.play()
-            .then(() => console.log(`🎵 Playing reminder audio... (${playCount + 1}/${maxPlays})`))
-            .catch(err => console.error("❌ Error playing audio:", err));
-          
-          playCount++; // ➕ Increase play count
-        } else {
-          console.log(`✅ Audio played ${maxPlays} times.`);
-        }
-      };
-    
-      // 🔄 Play the first time
-      playAudio();
-    
-      // 🔁 Loop until it reaches 5 plays
-      audio.onended = () => {
-        if (playCount < maxPlays) {
-          playAudio();
-        } else {
-          console.log(`🗑 Audio file ${filename} played 5 times.`);
-        }
-      };
-    });
-    
-
-    return () => {
-      channel.close();
-      socket.off("reminder_audio");
-    };
-  }, []); 
 
 
+
+  const [ison, setIson] = useState(false);
   const usersname = localStorage.getItem('usersmail');
   useEffect(() => {
     if (!usersname) {
       localStorage.clear();
     }
-    console.log(usersname);
   }, [])
 
   const [name, setName] = useState('');
@@ -96,7 +41,6 @@ const AiPage = () => {
       const usernamee = await axios.get('https://jarvis-ai-1.onrender.com/username');
       const username = usernamee.data;
       setName(username);
-      console.log(name);
     }
     userfunc();
   }, [])
@@ -105,32 +49,6 @@ const AiPage = () => {
   useEffect(() => {
     localStorage.setItem("tasks", JSON.stringify(taskbarName));
   }, [taskbarName]);
-
-  function keepAudioAlive() {
-    navigator.mediaDevices.getUserMedia({ audio: true })
-    .then(stream => {
-        const audioContext = new AudioContext();
-        const source = audioContext.createMediaStreamSource(stream);
-        source.connect(audioContext.destination); // Keeps WebRTC alive
-    })
-    .catch(err => console.error('Mic Access Denied:', err));
-}
-
-function speak(text) {
-  if (navigator.serviceWorker.controller) {
-      navigator.serviceWorker.controller.postMessage({ type: 'speak', text });
-  } else {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1; 
-      utterance.pitch = 1;
-      utterance.volume = 1;
-      window.speechSynthesis.speak(utterance);
-  }
-}
-
-
-
-
 
 
 
@@ -168,6 +86,23 @@ function speak(text) {
 
   const chatRef = useRef(null);
   const navRef = useRef(null);
+
+  const speak = (text) => {
+    if (window.speechSynthesis) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      utterance.voice = window.speechSynthesis.getVoices().find(voice => voice.name === 'Google UK English');
+      utterance.onend = () => {
+        console.log('Speech finished');
+      };
+      utterance.onerror = (event) => {
+        console.error('Speech synthesis error:', event.error);
+      }
+      window.speechSynthesis.speak(utterance);
+    } else {
+      console.error('Speech Synthesis API not supported in this browser.');
+    }
+  };
 
   const saveData = async (message, conversationId) => {
     const timestamp = new Date().toISOString();
@@ -266,48 +201,48 @@ function speak(text) {
 
 
 
-function parseReminder(text) {
-    let intent = "reminder"; 
+  function parseReminder(text) {
+    let intent = "reminder";
     let task = "";
     let datetime = null;
 
     const parsedDate = chrono.parseDate(text);
     console.log(parsedDate);
     if (parsedDate) {
-        datetime = parsedDate.toISOString();
-        const chronoResult = chrono.parse(text);
-        console.log(chronoResult);
-        if (chronoResult.length > 0) {
-            text = text.replace(chronoResult[0].text, "").trim(); 
-        }
+      datetime = parsedDate.toISOString();
+      const chronoResult = chrono.parse(text);
+      console.log(chronoResult);
+      if (chronoResult.length > 0) {
+        text = text.replace(chronoResult[0].text, "").trim();
+      }
     }
 
     task = text.replace(/remind me to|set me a reminder to|alert me about|remind me that/, "").trim();
-    
-    console.log({intent, task, datetime});
+
+    console.log({ intent, task, datetime });
     return { intent, task, datetime };
-}
-function parseTasks(text) {
-    let intent = "task"; 
+  }
+  function parseTasks(text) {
+    let intent = "task";
     let task = "";
     let datetime = null;
 
     const parsedDate = chrono.parseDate(text);
     console.log(parsedDate);
     if (parsedDate) {
-        datetime = parsedDate.toISOString();
-        const chronoResult = chrono.parse(text);
-        console.log(chronoResult);
-        if (chronoResult.length > 0) {
-            text = text.replace(chronoResult[0].text, "").trim(); 
-        }
+      datetime = parsedDate.toISOString();
+      const chronoResult = chrono.parse(text);
+      console.log(chronoResult);
+      if (chronoResult.length > 0) {
+        text = text.replace(chronoResult[0].text, "").trim();
+      }
     }
 
     task = text.replace(/"add task|note down|remember to |schedule me/, "").trim();
-    
-    console.log({intent, task, datetime});
+
+    console.log({ intent, task, datetime });
     return { intent, task, datetime };
-}
+  }
 
 
 
@@ -347,8 +282,8 @@ function parseTasks(text) {
 
 
     if (isTaskMessage(message)) {
-      
-     const parsedmessa = parseTasks(message);
+
+      const parsedmessa = parseTasks(message);
       const saveTaskdeadline = await axios.post("https://jarvis-ai-2.onrender.com/tasks", {
         username: usersname,
         intent: parsedmessa.intent,
@@ -358,11 +293,8 @@ function parseTasks(text) {
       setTaskName(parsedmessa.task);
       setTaskbarName((prev) => [...prev, { type: 'task', message: parsedmessa.task }]);
       inputField.value = ""
-      setMessages((prev) => [...prev, { message: "Task Added Successfully!" }]);
-      const botMessage = { sender: 'bot', message: "Task Added Successfully!" };
-      saveData(botMessage, userid)
     }
-  
+
 
 
     else if (isReminderMessage(message)) {
@@ -375,12 +307,8 @@ function parseTasks(text) {
         task: parsedmess.task
       });
       inputField.value = "";
-      const botMessage = { sender: 'bot', message: "Reminder is Set!" };
-      saveData(botMessage, userid);
-      setMessages((prev) => [...prev, { message: "Reminder is Set!" }]);
     }
 
-    else {
       try {
         setLoaderRef(true);
         const res = await axios.post('https://jarvis-ai-8pr6.onrender.com/api/gemini', {
@@ -394,6 +322,9 @@ function parseTasks(text) {
         botMessageText = formatGeminiResponse(botMessageText);
         const botMessage = { sender: 'bot', message: botMessageText };
         setMessages((prev) => [...prev, botMessage]);
+        if (ison) {
+          speak(res.data.response);
+        }
         saveData(botMessage, userid);
       } catch (err) {
         console.error('Error fetching response:', err);
@@ -401,7 +332,6 @@ function parseTasks(text) {
         setLoaderRef(false);
         inputField.value = '';
       }
-    }
   };
 
 
@@ -409,77 +339,32 @@ function parseTasks(text) {
     const recognition = new SpeechRecognition();
     recognition.lang = 'en-US';
     recognition.interimResults = false;
-    recognition.continuous = true; 
+    recognition.continuous = true;
     recognition.maxAlternatives = 1;
 
     recognition.start();
 
     recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript.toLowerCase().trim();
-        console.log("Heard:", transcript);
-
-        if (transcript.includes("hey jarvis")) {
-            console.log("Wake word detected! Switching to Full-Power Mode.");
-            enterFullPowerMode();
-        } else if (transcript.includes("stop jarvis")) {
-            console.log("Stopping JARVIS voice...");
-            stopSpeaking();
-        } else {
-            document.getElementById('input').value = transcript;
-            getResponse();
-        }
+      const transcript = event.results[0][0].transcript.toLowerCase().trim();
+      console.log("Heard:", transcript);
+        document.getElementById('input').value = transcript;
+        getResponse();
+        recognition.stop();
     };
 
     recognition.onerror = (event) => {
-        console.error("Speech recognition error:", event.error);
+      console.error("Speech recognition error:", event.error);
     };
 
     recognition.onend = () => {
-        console.log("Speech recognition stopped. Restarting...");
-        startListening(); 
+      console.log("Speech recognition stopped. Restarting...");
     };
-};
-
-const enterFullPowerMode = () => {
-  console.log("Entering Full-Power Mode...");
-
-  const recognition = new SpeechRecognition();
-  recognition.lang = 'en-US';
-  recognition.interimResults = false;
-  recognition.continuous = true;
-  recognition.maxAlternatives = 1;
-
-  recognition.start();
-
-  recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript.toLowerCase().trim();
-      console.log("Full-Power Mode Heard:", transcript);
-
-      if (transcript.includes("stop jarvis")) {
-          console.log("Stopping JARVIS voice...");
-          stopSpeaking();
-      } else {
-          document.getElementById('input').value = transcript;
-          getResponse();
-      }
   };
 
-  recognition.onerror = (event) => {
-      console.error("Full-Power Mode error:", event.error);
-  };
 
-  recognition.onend = () => {
-      console.log("Full-Power Mode stopped. Restarting Low-Power Mode...");
-      startListening(); 
-  };
-};
+  
+  
 
-const stopSpeaking = () => {
-  if (window.speechSynthesis.speaking) {
-      window.speechSynthesis.cancel();
-      console.log("JARVIS Voice Stopped.");
-  }
-};
 
 
   const resetChat = async () => {
@@ -536,6 +421,7 @@ const stopSpeaking = () => {
 
         <div className='ham-burger' ref={navRef}>
           <ul>
+            <li><div className='voice-mode-toggle' onClick={() => { ison?setIson(false):setIson(true), document.querySelector('.voice-mode-toggle').classList.toggle('activate') }}>Jarvis-Mode</div></li>
             <li>
               <button onClick={() => { resetChat(); toggleNav(); }}>DELETE CHAT</button>
             </li>

@@ -24,7 +24,7 @@
     color:white;
     opacity: 0;
     animation: appear 4s forwards;
-    animation-delay: 29s;
+    animation-delay: 5s;
     justify-content: center;
     justify-items: center;
 }
