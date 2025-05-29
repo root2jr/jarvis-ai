@@ -430,7 +430,7 @@ const AiPage = () => {
 
   return (
     <div className='aipage'>
-      <video autoPlay loop muted>
+      <video autoPlay loop muted poster='true' id='bgVideo'>
         <source src={aiBg} type='video/mp4' />
       </video>
 
