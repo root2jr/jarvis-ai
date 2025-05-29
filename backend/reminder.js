@@ -9,6 +9,7 @@ import { Server } from "socket.io";
 import { exec } from "child_process";
 import path from 'path';
 import fs from 'fs'
+import jwt from 'jsonwebtoken';
 
 
 
@@ -40,7 +41,6 @@ io.on("connection", (socket) => {
   });
 });
 
-// ✅ Attach Socket.io to the server
 
 
 const { MONGO_URI, PORT, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID } = process.env;
@@ -67,6 +67,14 @@ let usersname = "";
 
 app.post("/reminders", async (req, res) => {
   try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!decoded || !decoded.username) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
     const { username, datetime, intent, task } = req.body;
     usersname = username;
 
@@ -105,6 +113,14 @@ const TaskModel = mongoose.model("Task", TaskSchema)
 
 app.post("/tasks", async (req, res) => {
   try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!decoded || !decoded.username) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
     const { username, datetime, intent, task } = req.body;
     usersname = username;
 

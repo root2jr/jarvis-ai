@@ -14,7 +14,7 @@ const app = express();
 
 app.use(cors({
     origin: 'https://j-a-r-v-i-s-ai.netlify.app',
-    methods: ['GET', 'POST','PUT', 'DELETE'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true,
 }));
 app.use(express.json());
@@ -41,32 +41,41 @@ app.post('/login', async (req, res) => {
     try {
         const { usermail, password, change } = req.body;
         name = usermail;
-        if(change){
-            const hashedpass = await bcrypt.hash(password,saltRounds);
-            const changeUserpassword = await model.findOneAndUpdate({ usermail },{ password: hashedpass});
+        if (change) {
+            const token = req.headers.authorization?.split(' ')[1];
+            if (!token) {
+                return res.status(401).json({ error: 'Unauthorized' });
+            }
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            if (!decoded || !decoded.username) {
+                return res.status(401).json({ error: 'Invalid token' });
+            }
+            const hashedpass = await bcrypt.hash(password, saltRounds);
+            const changeUserpassword = await model.findOneAndUpdate({ usermail }, { password: hashedpass });
             console.log('Password changed successfully');
         }
-        else{
-        const existingUser = await model.findOne({ usermail });
+        else {
+            const existingUser = await model.findOne({ usermail });
 
-        if (existingUser) {
-            const compare = await bcrypt.compare(password, existingUser.password);
-            if (compare) {
-                const token = jwt.sign({ username: existingUser }, JWT_SECRET, { expiresIn: "7d" });
-                
-                return res.send({ status: 'login', message: 'Login accepted', token, usermail });
+            if (existingUser) {
+                const compare = await bcrypt.compare(password, existingUser.password);
+                if (compare) {
+                    const token = jwt.sign({ username: existingUser }, JWT_SECRET, { expiresIn: "7d" });
 
+                    return res.send({ status: 'login', message: 'Login accepted', token, usermail });
+
+                } else {
+                    return res.json({ status: 'error', message: 'Wrong credentials' });
+                }
             } else {
-                return res.json({ status: 'error', message: 'Wrong credentials' });
+                const encryptedPassword = await bcrypt.hash(password, saltRounds);
+                const newUser = new model({ usermail, password: encryptedPassword });
+                await newUser.save();
+                return res.json({ status: 'ok', message: 'New user created' });
             }
-        } else {
-            const encryptedPassword = await bcrypt.hash(password, saltRounds);
-            const newUser = new model({ usermail, password: encryptedPassword });
-            await newUser.save();
-            return res.json({ status: 'ok', message: 'New user created' });
-        }
 
-    }} catch (err) {
+        }
+    } catch (err) {
         console.error("Error:", err);
         return res.status(500).json({ status: 'error', message: 'Something went wrong' });
     }
@@ -84,6 +93,14 @@ const otpmodel = mongoose.model('otp', otpSchema, 'otp');
 
 app.post('/otp', async (req, res) => {
     const { usermail, otp } = req.body;
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!decoded || !decoded.username) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
     const otpauth = await otpmodel({ email: usermail, otp: otp });
     otpauth.save();
     console.log("Email saved");
@@ -91,29 +108,29 @@ app.post('/otp', async (req, res) => {
 
 
 
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS, 
-    },
-  });
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+        },
+    });
 
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: usermail,
-    subject: 'Your OTP from JARVIS',
-    text: `Your OTP is: ${otp}`,
-  };
+    const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: usermail,
+        subject: 'Your OTP from JARVIS',
+        text: `Your OTP is: ${otp}`,
+    };
 
-  try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Email sent:', info.response);
-    res.status(200).json({ message: 'OTP sent successfully' });
-  } catch (error) {
-    console.error('Error sending email:', error);
-    res.status(500).json({ message: 'Failed to send OTP' });
-  }
+    try {
+        const info = await transporter.sendMail(mailOptions);
+        console.log('Email sent:', info.response);
+        res.status(200).json({ message: 'OTP sent successfully' });
+    } catch (error) {
+        console.error('Error sending email:', error);
+        res.status(500).json({ message: 'Failed to send OTP' });
+    }
 });
 
 
