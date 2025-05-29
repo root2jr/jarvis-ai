@@ -12,8 +12,11 @@ const AiPage = () => {
 
 
 
+
+
   const [ison, setIson] = useState(false);
   const usersname = localStorage.getItem('usersmail');
+  const jwt = localStorage.getItem('token');
   useEffect(() => {
     if (!usersname) {
       localStorage.clear();
@@ -38,7 +41,11 @@ const AiPage = () => {
 
   useEffect(() => {
     const userfunc = async () => {
-      const usernamee = await axios.get('https://jarvis-ai-1.onrender.com/username');
+      const usernamee = await axios.get('https://jarvis-ai-1.onrender.com/username', {
+        headers: {
+          Authorization: `Bearer ${jwt}`
+        }
+      });
       const username = usernamee.data;
       setName(username);
     }
@@ -65,7 +72,11 @@ const AiPage = () => {
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const res = await axios.get(`https://jarvis-ai-8pr6.onrender.com/conversations/${usersname}`);
+        const res = await axios.get(`https://jarvis-ai-8pr6.onrender.com/conversations/${usersname}`, {
+          headers: {
+            Authorization: `Bearer ${jwt}`
+          }
+        });
         if (res) {
           if (Array.isArray(res.data.messages)) {
 
@@ -116,6 +127,10 @@ const AiPage = () => {
         timestamp,
         username: usersname,
         conversationId,
+      },{
+        headers: {
+          Authorization: `Bearer ${jwt}`
+        }
       })
     );
 
@@ -289,6 +304,10 @@ const AiPage = () => {
         intent: parsedmessa.intent,
         datetime: parsedmessa.datetime,
         task: parsedmessa.task
+      },{
+        headers: {
+          Authorization: `Bearer ${jwt}`
+        },
       })
       setTaskName(parsedmessa.task);
       setTaskbarName((prev) => [...prev, { type: 'task', message: parsedmessa.task }]);
@@ -305,33 +324,39 @@ const AiPage = () => {
         intent: parsedmess.intent,
         datetime: parsedmess.datetime,
         task: parsedmess.task
+      },{
+        headers: {
+          Authorization: `Bearer ${jwt}`
+        },
       });
       inputField.value = "";
     }
 
-      try {
-        setLoaderRef(true);
-        const res = await axios.post('https://jarvis-ai-8pr6.onrender.com/api/gemini', {
-          prompt: message,
-          conversationId: userid,
-          username: usersname
-        });
-        let botMessageText = res.data.response.startsWith('JARVIS:')
-          ? res.data.response.replace('JARVIS:', '')
-          : res.data.response;
-        botMessageText = formatGeminiResponse(botMessageText);
-        const botMessage = { sender: 'bot', message: botMessageText };
-        setMessages((prev) => [...prev, botMessage]);
-        if (ison) {
-          speak(res.data.response);
-        }
-        saveData(botMessage, userid);
-      } catch (err) {
-        console.error('Error fetching response:', err);
-      } finally {
-        setLoaderRef(false);
-        inputField.value = '';
+    try {
+      setLoaderRef(true);
+      const res = await axios.post('https://jarvis-ai-8pr6.onrender.com/api/gemini', {
+        prompt: message,
+        conversationId: userid,
+        username: usersname
+      },{headers: {
+          Authorization: `Bearer ${jwt}`
+        }});
+      let botMessageText = res.data.response.startsWith('JARVIS:')
+        ? res.data.response.replace('JARVIS:', '')
+        : res.data.response;
+      botMessageText = formatGeminiResponse(botMessageText);
+      const botMessage = { sender: 'bot', message: botMessageText };
+      setMessages((prev) => [...prev, botMessage]);
+      if (ison) {
+        speak(res.data.response);
       }
+      saveData(botMessage, userid);
+    } catch (err) {
+      console.error('Error fetching response:', err);
+    } finally {
+      setLoaderRef(false);
+      inputField.value = '';
+    }
   };
 
 
@@ -347,9 +372,9 @@ const AiPage = () => {
     recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript.toLowerCase().trim();
       console.log("Heard:", transcript);
-        document.getElementById('input').value = transcript;
-        getResponse();
-        recognition.stop();
+      document.getElementById('input').value = transcript;
+      getResponse();
+      recognition.stop();
     };
 
     recognition.onerror = (event) => {
@@ -362,13 +387,15 @@ const AiPage = () => {
   };
 
 
-  
-  
+
+
 
 
 
   const resetChat = async () => {
-    const deletechat = await axios.post(`https://jarvis-ai-8pr6.onrender.com/convoss/${usersname}`)
+    const deletechat = await axios.post(`https://jarvis-ai-8pr6.onrender.com/convoss/${usersname}`,{headers: {
+          Authorization: `Bearer ${jwt}`
+        }});
     setMessages([
       { sender: 'user', message: "Wake Up J.A.R.V.I.S, Daddy's Home" },
       { sender: 'bot', message: "Welcome Home Sir, What are we going to work on today?" },
@@ -421,7 +448,7 @@ const AiPage = () => {
 
         <div className='ham-burger' ref={navRef}>
           <ul>
-            <li><div className='voice-mode-toggle' onClick={() => { ison?setIson(false):setIson(true), document.querySelector('.voice-mode-toggle').classList.toggle('activate') }}>Jarvis-Mode</div></li>
+            <li><div className='voice-mode-toggle' onClick={() => { ison ? setIson(false) : setIson(true), document.querySelector('.voice-mode-toggle').classList.toggle('activate') }}>Jarvis-Mode</div></li>
             <li>
               <button onClick={() => { resetChat(); toggleNav(); }}>DELETE CHAT</button>
             </li>
