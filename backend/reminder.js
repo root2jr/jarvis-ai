@@ -14,7 +14,11 @@ import fs from 'fs'
 
 dotenv.config();
 const app = express();
-app.use(cors());
+app.use(cors({
+    origin: 'https://j-a-r-v-i-s-ai.netlify.app',
+    methods: ['GET', 'POST','PUT', 'DELETE'],
+    credentials: true,
+}));
 app.use(express.json());
 
 

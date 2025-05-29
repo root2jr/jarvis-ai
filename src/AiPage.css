@@ -13,6 +13,7 @@ nav{
     height:40px;
     align-items: center;
     justify-content: center;
+    background-color:  rgba(0, 0, 0, 0.637);
 }
 .aipage video{
     width: 100%;
@@ -285,4 +286,25 @@ nav h1{
         margin-top: 17px;
         left:0;
     }
+}
+.voice-mode-toggle{
+    border-radius: 40px;
+    border:1px solid skyblue;
+    background:transparent;
+    color: skyblue;
+    font-size: 20px;
+    padding:15px;
+    transition: .5s ease;
+}
+.voice-mode-toggle:hover{
+    background: skyblue;
+    color: white;
+}
+.activate{
+    border-radius: 40px;
+    background-color: skyblue;
+    color:white;
+    font-size: 20px;
+    padding:15px;
+    transition: .5s ease;
 }

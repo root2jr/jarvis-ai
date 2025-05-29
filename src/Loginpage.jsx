@@ -49,7 +49,7 @@ const Loginpage = () => {
             fail.innerText = "NEW USER CREATED!"
             msg.classList.toggle('success');
             localStorage.setItem('token', response.data.token);
-            localStorage.setItem('usersmail',response.data.usermail);
+            localStorage.setItem('usersmail',usermail);
             successPage();
 
         }
@@ -79,9 +79,6 @@ const Loginpage = () => {
 
 
 
-
-
-
     return (
         <div className='login'>
             <video autoPlay muted loop id='bgVideo'>
@@ -97,7 +94,7 @@ const Loginpage = () => {
                     {/* Add name attr & use 'new-username' to prevent Chrome from autofilling */}
                     <input
                         type="mail"
-                        name=",ail"
+                        name="mail"
                         placeholder="Enter Your Mail ID"
                         autoComplete="new-username"
                         id='username'
