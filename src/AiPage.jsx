@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './AiPage.css';
-import aiBg from './bg.mp4';
+import aiBg from './bg3.mp4';
 import axios from 'axios';
 import jarvisLogo from './jarvis-logo.jpg';
 import Tasks from './Tasks';
@@ -348,7 +348,8 @@ const AiPage = () => {
       const botMessage = { sender: 'bot', message: botMessageText };
       setMessages((prev) => [...prev, botMessage]);
       if (ison) {
-        speak(res.data.response);
+        const speakableres = res.data.response.replace('<p>'||'</p>');
+        speak(speakableres);
       }
       saveData(botMessage, userid);
     } catch (err) {
