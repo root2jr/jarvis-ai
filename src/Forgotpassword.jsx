@@ -3,7 +3,7 @@ import bg from './bg.mp4';
 import './Fp.css';
 import axios from 'axios';
 import { useRef } from 'react';
-
+import Posterimg from './Capture.jpg'
 
 const Forgotpassword = () => {
     const otpRef = useRef(null);
@@ -71,7 +71,7 @@ const Forgotpassword = () => {
 
     return (
         <div className='forgotpage'>
-            <video autoPlay muted loop id='bgVideo'>
+            <video autoPlay muted loop poster={Posterimg} id='bgVideo'>
                 <source src={bg} type='video/mp4' />
             </video>
             <div className="bg-layer">
