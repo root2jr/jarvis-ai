@@ -5,11 +5,17 @@ import axios from 'axios';
 import jarvisLogo from './jarvis-logo.jpg';
 import Tasks from './Tasks';
 import * as chrono from "chrono-node";
+import postImg from './Capture.jpg'
+import { useNavigate } from 'react-router-dom';
 
 
 const AiPage = () => {
+  const navigate = useNavigate();
 
-
+  function Loggout() {
+    localStorage.clear();
+    navigate('/');
+  }
 
 
 
@@ -127,7 +133,7 @@ const AiPage = () => {
         timestamp,
         username: usersname,
         conversationId,
-      },{
+      }, {
         headers: {
           Authorization: `Bearer ${jwt}`
         }
@@ -304,7 +310,7 @@ const AiPage = () => {
         intent: parsedmessa.intent,
         datetime: parsedmessa.datetime,
         task: parsedmessa.task
-      },{
+      }, {
         headers: {
           Authorization: `Bearer ${jwt}`
         },
@@ -324,7 +330,7 @@ const AiPage = () => {
         intent: parsedmess.intent,
         datetime: parsedmess.datetime,
         task: parsedmess.task
-      },{
+      }, {
         headers: {
           Authorization: `Bearer ${jwt}`
         },
@@ -338,9 +344,11 @@ const AiPage = () => {
         prompt: message,
         conversationId: userid,
         username: usersname
-      },{headers: {
+      }, {
+        headers: {
           Authorization: `Bearer ${jwt}`
-        }});
+        }
+      });
       let botMessageText = res.data.response.startsWith('JARVIS:')
         ? res.data.response.replace('JARVIS:', '')
         : res.data.response;
@@ -348,7 +356,7 @@ const AiPage = () => {
       const botMessage = { sender: 'bot', message: botMessageText };
       setMessages((prev) => [...prev, botMessage]);
       if (ison) {
-        const speakableres = res.data.response.replace('<p>'||'</p>');
+        const speakableres = res.data.response.replace(/<\/?p[^>]*>/gi, '');;
         speak(speakableres);
       }
       saveData(botMessage, userid);
@@ -394,9 +402,11 @@ const AiPage = () => {
 
 
   const resetChat = async () => {
-    const deletechat = await axios.post(`https://jarvis-ai-8pr6.onrender.com/convoss/${usersname}`,{headers: {
-          Authorization: `Bearer ${jwt}`
-        }});
+    const deletechat = await axios.post(`https://jarvis-ai-8pr6.onrender.com/convoss/${usersname}`, {}, {
+      headers: {
+        Authorization: `Bearer ${jwt}`
+      }
+    });
     setMessages([
       { sender: 'user', message: "Wake Up J.A.R.V.I.S, Daddy's Home" },
       { sender: 'bot', message: "Welcome Home Sir, What are we going to work on today?" },
@@ -431,7 +441,7 @@ const AiPage = () => {
 
   return (
     <div className='aipage'>
-      <video autoPlay loop muted poster='true' id='bgVideo'>
+      <video autoPlay loop muted poster={postImg} id='bgVideo'>
         <source src={aiBg} type='video/mp4' />
       </video>
 
@@ -459,6 +469,15 @@ const AiPage = () => {
             <li>
               <a href='https://portfolio-jram-18.netlify.app/#about'>CREATOR</a>
             </li>
+            <li onClick={() => {document.getElementById("Confirm").classList.toggle("act")}}><div className="Logout" id='Logout' >Log Out</div></li>
+            <li><div className="Confirm" id='Confirm'>
+              <h1>Log Out</h1>
+              <p>Are you Sure?</p>
+              <div className="Log-buttons">
+                <button className='btn-1' onClick={() => {document.getElementById("Confirm").classList.toggle("act")}}>No</button>
+                <button className='btn-2' onClick={ () => Loggout }>Log Out</button>
+              </div>
+            </div></li>
           </ul>
         </div>
 
