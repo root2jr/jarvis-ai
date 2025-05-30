@@ -475,7 +475,7 @@ const AiPage = () => {
               <p>Are you Sure?</p>
               <div className="Log-buttons">
                 <button className='btn-1' onClick={() => {document.getElementById("Confirm").classList.toggle("act")}}>No</button>
-                <button className='btn-2' onClick={ () => Loggout }>Log Out</button>
+                <button className='btn-2' onClick={ Loggout }>Log Out</button>
               </div>
             </div></li>
           </ul>
