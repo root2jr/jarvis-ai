@@ -4,8 +4,12 @@ import './Fp.css';
 import axios from 'axios';
 import { useRef } from 'react';
 import Posterimg from './Capture.jpg'
+import { useNavigate } from 'react-router-dom';
 
 const Forgotpassword = () => {
+
+    const navigate = useNavigate();
+
     const otpRef = useRef(null);
     const [firstotp, setFirstotp] = useState();
     const [mailName, setMailName] = useState();
@@ -15,16 +19,13 @@ const Forgotpassword = () => {
     const sendEmail = async () => {
         if (newpass == 1) {
             const newpassword = document.getElementById('email').value;
-            const passchange = axios.post('https://jarvis-ai-1.onrender.com/login', {
+            const passchange = axios.post('https://copper-yielding-care.glitch.me/login', {
                 usermail: mailName,
                 password: newpassword,
                 change: 'yes'
-            }, {
-                headers: {
-                    Authorization: `Bearer ${jwt}`
-                }
             })
-            return;
+            alert("Password has been Sucessfully changed");
+            navigate('/login');
         }
         const usermail = document.getElementById('email').value;
         setMailName(usermail);
@@ -55,7 +56,7 @@ const Forgotpassword = () => {
             console.log('Sending email...');
 
             try {
-                const response = await axios.post('https://jarvis-ai-1.onrender.com/otp', {
+                const response = await axios.post('https://copper-yielding-care.glitch.me/otp', {
                     usermail: usermail,
                     otp: otp,
                 });
