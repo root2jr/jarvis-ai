@@ -56,7 +56,7 @@ const Forgotpassword = () => {
             console.log('Sending email...');
 
             try {
-                const response = await axios.post('https://copper-yielding-care.glitch.me/otp', {
+                const response = await axios.post('https://jarvis-ai-8pr6.onrender.com/otp', {
                     usermail: usermail,
                     otp: otp,
                 });
