@@ -370,7 +370,7 @@ app.post("/tasks", async (req, res) => {
 
 const sendTelegramMessage = async (text) => {
   try {
-    const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
+    const url = `https://api.telegram.org/bot7723966124:AAGUeYL2gEai6dDXUnS76pFYpLWVCB5CKxo/sendMessage`;
     await axios.post(url, {
       chat_id: TELEGRAM_CHAT_ID,
       text,
