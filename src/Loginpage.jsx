@@ -36,7 +36,7 @@ const Loginpage = () => {
            return ;
         }
 
-        const response = await axios.post('https://copper-yielding-care.glitch.me/login', {
+        const response = await axios.post('https://jarvis-ai-8pr6.onrender.com/login', {
             usermail: usermail,
             password: password
         });

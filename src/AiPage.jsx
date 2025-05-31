@@ -47,7 +47,7 @@ const AiPage = () => {
 
   useEffect(() => {
     const userfunc = async () => {
-      const usernamee = await axios.get('https://copper-yielding-care.glitch.me/username', {
+      const usernamee = await axios.get('https://jarvis-ai-8pr6.onrender.com/username', {
         headers: {
           Authorization: `Bearer ${jwt}`
         }
@@ -78,7 +78,7 @@ const AiPage = () => {
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const res = await axios.get(`https://copper-yielding-care.glitch.me/conversations/${usersname}`, {
+        const res = await axios.get(`https://jarvis-ai-8pr6.onrender.com/conversations/${usersname}`, {
           headers: {
             Authorization: `Bearer ${jwt}`
           }
@@ -127,7 +127,7 @@ const AiPage = () => {
 
 
     requests.push(
-      axios.post('https://copper-yielding-care.glitch.me/conversations', {
+      axios.post('https://jarvis-ai-8pr6.onrender.com/conversations', {
         sender: message.sender,
         message: message.message,
         timestamp,
@@ -305,7 +305,7 @@ const AiPage = () => {
     if (isTaskMessage(message)) {
 
       const parsedmessa = parseTasks(message);
-      const saveTaskdeadline = await axios.post("https://jarvis-ai-2.onrender.com/tasks", {
+      const saveTaskdeadline = await axios.post("https://jarvis-ai-8pr6.onrender.com/tasks", {
         username: usersname,
         intent: parsedmessa.intent,
         datetime: parsedmessa.datetime,
@@ -325,7 +325,7 @@ const AiPage = () => {
     else if (isReminderMessage(message)) {
       console.log("Reminder Detected");
       const parsedmess = parseReminder(message);
-      const sendReminder = await axios.post("https://jarvis-ai-2.onrender.com/reminders", {
+      const sendReminder = await axios.post("https://jarvis-ai-8pr6.onrender.com/reminders", {
         username: usersname,
         intent: parsedmess.intent,
         datetime: parsedmess.datetime,
@@ -340,7 +340,7 @@ const AiPage = () => {
 
     try {
       setLoaderRef(true);
-      const res = await axios.post('https://copper-yielding-care.glitch.me/api/gemini', {
+      const res = await axios.post('https://jarvis-ai-8pr6.onrender.com/api/gemini', {
         prompt: message,
         conversationId: userid,
         username: usersname
@@ -402,7 +402,7 @@ const AiPage = () => {
 
 
   const resetChat = async () => {
-    const deletechat = await axios.post(`https://copper-yielding-care.glitch.me/convoss/${usersname}`, {}, {
+    const deletechat = await axios.post(`https://jarvis-ai-8pr6.onrender.com/convoss/${usersname}`, {}, {
       headers: {
         Authorization: `Bearer ${jwt}`
       }

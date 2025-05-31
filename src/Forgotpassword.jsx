@@ -19,7 +19,7 @@ const Forgotpassword = () => {
     const sendEmail = async () => {
         if (newpass == 1) {
             const newpassword = document.getElementById('email').value;
-            const passchange = axios.post('https://copper-yielding-care.glitch.me/login', {
+            const passchange = axios.post('https://jarvis-ai-8pr6.onrender.com/login', {
                 usermail: mailName,
                 password: newpassword,
                 change: 'yes'
