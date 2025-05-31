@@ -427,7 +427,6 @@ const AiPage = () => {
     const storedId = localStorage.getItem('userid');
     if (storedId) {
       setUserid(storedId);
-      console.log(storedId);
     } else {
       const newId = Math.floor(Math.random() * 1000) + 1;
       setUserid(newId);
