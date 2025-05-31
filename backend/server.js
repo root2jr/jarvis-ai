@@ -242,14 +242,6 @@ const otpmodel = mongoose.model('otp', otpSchema, 'otp');
 
 app.post('/otp', async (req, res) => {
     const { usermail, otp } = req.body;
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (!decoded || !decoded.username) {
-      return res.status(401).json({ error: 'Invalid token' });
-    }
     const otpauth = await otpmodel({ email: usermail, otp: otp });
     otpauth.save();
     console.log("Email saved");

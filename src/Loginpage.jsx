@@ -90,7 +90,6 @@ const Loginpage = () => {
                 <div className="login-box">
                     <h1>Login</h1>
 
-                    {/* Add name attr & use 'new-username' to prevent Chrome from autofilling */}
                     <input
                         type="mail"
                         name="mail"
@@ -99,7 +98,6 @@ const Loginpage = () => {
                         id='username'
                     />
 
-                    {/* Same here for password */}
                     <input
                         type="password"
                         name="password"
