@@ -47,7 +47,7 @@ const AiPage = () => {
 
   useEffect(() => {
     const userfunc = async () => {
-      const usernamee = await axios.get('https://jarvis-ai-8pr6.onrender.com/username', {
+      const usernamee = await axios.get('https://copper-yielding-care.glitch.me/username', {
         headers: {
           Authorization: `Bearer ${jwt}`
         }
@@ -78,7 +78,7 @@ const AiPage = () => {
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const res = await axios.get(`https://jarvis-ai-8pr6.onrender.com/conversations/${usersname}`, {
+        const res = await axios.get(`https://copper-yielding-care.glitch.me/conversations/${usersname}`, {
           headers: {
             Authorization: `Bearer ${jwt}`
           }
@@ -127,7 +127,7 @@ const AiPage = () => {
 
 
     requests.push(
-      axios.post('https://jarvis-ai-8pr6.onrender.com/conversations', {
+      axios.post('https://copper-yielding-care.glitch.me/conversations', {
         sender: message.sender,
         message: message.message,
         timestamp,
@@ -305,7 +305,7 @@ const AiPage = () => {
     if (isTaskMessage(message)) {
 
       const parsedmessa = parseTasks(message);
-      const saveTaskdeadline = await axios.post("https://jarvis-ai-8pr6.onrender.com/tasks", {
+      const saveTaskdeadline = await axios.post("https://copper-yielding-care.glitch.me/tasks", {
         username: usersname,
         intent: parsedmessa.intent,
         datetime: parsedmessa.datetime,
@@ -325,196 +325,206 @@ const AiPage = () => {
     else if (isReminderMessage(message)) {
       console.log("Reminder Detected");
       const parsedmess = parseReminder(message);
-      const sendReminder = await axios.post("https://jarvis-ai-8pr6.onrender.com/reminders", {
-        username: usersname,
-        intent: parsedmess.intent,
-        datetime: parsedmess.datetime,
-        task: parsedmess.task
+      const aiBotReply = await axios.post('https://copper-yielding-care.glitch.me/api/gemini', {
+        prompt: `you are sending the user a reminding message as JARVIS for this'${parsedmess.task}',make it in a single line`
       }, {
-        headers: {
-          Authorization: `Bearer ${jwt}`
-        },
-      });
-      inputField.value = "";
-    }
-
-    try {
-      setLoaderRef(true);
-      const res = await axios.post('https://jarvis-ai-8pr6.onrender.com/api/gemini', {
-        prompt: message,
-        conversationId: userid,
-        username: usersname
-      }, {
-        headers: {
-          Authorization: `Bearer ${jwt}`
-        }
-      });
-      let botMessageText = res.data.response.startsWith('JARVIS:')
-        ? res.data.response.replace('JARVIS:', '')
-        : res.data.response;
-      botMessageText = formatGeminiResponse(botMessageText);
-      const botMessage = { sender: 'bot', message: botMessageText };
-      setMessages((prev) => [...prev, botMessage]);
-      if (ison) {
-        const speakableres = res.data.response.replace(/<\/?p[^>]*>/gi, '');;
-        speak(speakableres);
+        headers:{
+        Authorization: `Bearer ${jwt}`
       }
-      saveData(botMessage, userid);
-    } catch (err) {
-      console.error('Error fetching response:', err);
-    } finally {
-      setLoaderRef(false);
-      inputField.value = '';
-    }
-  };
+        
+      });
+    const remmess = aiBotReply.data.response.replace(/<\/?p[^>]*>/gi, '');;
 
+    const sendReminder = await axios.post("https://copper-yielding-care.glitch.me/reminders", {
+      username: usersname,
+      intent: parsedmess.intent,
+      datetime: parsedmess.datetime,
+      task: remmess
+    }, {
+      headers: {
+        Authorization: `Bearer ${jwt}`
+      },
+    });
+    inputField.value = "";
+  }
 
-  const startListening = () => {
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'en-US';
-    recognition.interimResults = false;
-    recognition.continuous = true;
-    recognition.maxAlternatives = 1;
-
-    recognition.start();
-
-    recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript.toLowerCase().trim();
-      console.log("Heard:", transcript);
-      document.getElementById('input').value = transcript;
-      getResponse();
-      recognition.stop();
-    };
-
-    recognition.onerror = (event) => {
-      console.error("Speech recognition error:", event.error);
-    };
-
-    recognition.onend = () => {
-      console.log("Speech recognition stopped. Restarting...");
-    };
-  };
-
-
-
-
-
-
-
-  const resetChat = async () => {
-    const deletechat = await axios.post(`https://jarvis-ai-8pr6.onrender.com/convoss/${usersname}`, {}, {
+  try {
+    setLoaderRef(true);
+    const res = await axios.post('https://copper-yielding-care.glitch.me/api/gemini', {
+      prompt: message,
+      conversationId: userid,
+      username: usersname
+    }, {
       headers: {
         Authorization: `Bearer ${jwt}`
       }
     });
-    setMessages([
-      { sender: 'user', message: "Wake Up J.A.R.V.I.S, Daddy's Home" },
-      { sender: 'bot', message: "Welcome Home Sir, What are we going to work on today?"},
-    ]);
+    let botMessageText = res.data.response.startsWith('JARVIS:')
+      ? res.data.response.replace('JARVIS:', '')
+      : res.data.response;
+    botMessageText = formatGeminiResponse(botMessageText);
+    const botMessage = { sender: 'bot', message: botMessageText };
+    setMessages((prev) => [...prev, botMessage]);
+    if (ison) {
+      const speakableres = res.data.response.replace(/<\/?p[^>]*>/gi, '');;
+      speak(speakableres);
+    }
+    saveData(botMessage, userid);
+  } catch (err) {
+    console.error('Error fetching response:', err);
+  } finally {
+    setLoaderRef(false);
+    inputField.value = '';
+  }
+};
+
+
+const startListening = () => {
+  const recognition = new SpeechRecognition();
+  recognition.lang = 'en-US';
+  recognition.interimResults = false;
+  recognition.continuous = true;
+  recognition.maxAlternatives = 1;
+
+  recognition.start();
+
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript.toLowerCase().trim();
+    console.log("Heard:", transcript);
+    document.getElementById('input').value = transcript;
+    getResponse();
+    recognition.stop();
   };
 
-  useEffect(() => {
-    if (chatRef.current) {
-      chatRef.current.scrollTop = chatRef.current.scrollHeight;
-    }
-  }, [messages]);
-
-  const toggleNav = () => {
-    navRef.current.classList.toggle('hammy');
+  recognition.onerror = (event) => {
+    console.error("Speech recognition error:", event.error);
   };
 
-  useEffect(() => {
-    const storedId = localStorage.getItem('userid');
-    if (storedId) {
-      setUserid(storedId);
-    } else {
-      const newId = Math.floor(Math.random() * 1000) + 1;
-      setUserid(newId);
-      localStorage.setItem('userid', newId);
+  recognition.onend = () => {
+    console.log("Speech recognition stopped. Restarting...");
+  };
+};
+
+
+
+
+
+
+
+const resetChat = async () => {
+  const deletechat = await axios.post(`https://copper-yielding-care.glitch.me/convoss/${usersname}`, {}, {
+    headers: {
+      Authorization: `Bearer ${jwt}`
     }
-  }, []);
+  });
+  setMessages([
+    { sender: 'user', message: "Wake Up J.A.R.V.I.S, Daddy's Home" },
+    { sender: 'bot', message: "Welcome Home Sir, What are we going to work on today?" },
+  ]);
+};
 
-  useEffect(() => {
-    localStorage.setItem('messages', JSON.stringify(messages));
-  }, [messages]);
+useEffect(() => {
+  if (chatRef.current) {
+    chatRef.current.scrollTop = chatRef.current.scrollHeight;
+  }
+}, [messages]);
 
-  return (
-    <div className='aipage'>
-      <video autoPlay loop muted poster={postImg} id='bgVideo'>
-        <source src={aiBg} type='video/mp4' />
-      </video>
+const toggleNav = () => {
+  navRef.current.classList.toggle('hammy');
+};
 
-      <div className='content-bg'>
-        <nav>
-          <div className='nav-button' onClick={toggleNav}>
-            <i className='fa-solid fa-bars'></i>
-          </div>
-          <div className='buttons' onClick={resetChat}>
-            Reset Chat
-          </div>
-          <img src={jarvisLogo} alt='Jarvis Logo' />
-          <h1>J.A.R.V.I.S</h1>
-        </nav>
+useEffect(() => {
+  const storedId = localStorage.getItem('userid');
+  if (storedId) {
+    setUserid(storedId);
+  } else {
+    const newId = Math.floor(Math.random() * 1000) + 1;
+    setUserid(newId);
+    localStorage.setItem('userid', newId);
+  }
+}, []);
 
-        <div className='ham-burger' ref={navRef}>
-          <ul>
-            <li><div className='voice-mode-toggle' onClick={() => { ison ? setIson(false) : setIson(true), document.querySelector('.voice-mode-toggle').classList.toggle('activate') }}>Jarvis-Mode</div></li>
-            <li>
-              <button onClick={() => { resetChat(); toggleNav(); }}>DELETE CHAT</button>
-            </li>
-            <li>
-              <a onClick={toggleNav}>AI</a>
-            </li>
-            <li>
-              <a href='https://portfolio-jram-18.netlify.app/#about'>CREATOR</a>
-            </li>
-            <li onClick={() => {document.getElementById("Confirm").classList.toggle("act")}}><div className="Logout" id='Logout' >Log Out</div></li>
-            <li><div className="Confirm" id='Confirm'>
-              <h1>Log Out</h1>
-              <p>Are you Sure?</p>
-              <div className="Log-buttons">
-                <button className='btn-1' onClick={() => {document.getElementById("Confirm").classList.toggle("act")}}>No</button>
-                <button className='btn-2' onClick={ Loggout }>Log Out</button>
-              </div>
-            </div></li>
-          </ul>
+useEffect(() => {
+  localStorage.setItem('messages', JSON.stringify(messages));
+}, [messages]);
+
+return (
+  <div className='aipage'>
+    <video autoPlay loop muted poster={postImg} id='bgVideo'>
+      <source src={aiBg} type='video/mp4' />
+    </video>
+
+    <div className='content-bg'>
+      <nav>
+        <div className='nav-button' onClick={toggleNav}>
+          <i className='fa-solid fa-bars'></i>
         </div>
-
-        <div className='chat' ref={chatRef}>
-          <ul className='chat-list'>
-            {messages.map((msg, index) => (
-              <li key={index} className={msg.sender}>
-                <span dangerouslySetInnerHTML={{ __html: msg.message }} />
-              </li>
-            ))}
-
-
-            {loaderRef && (
-              <div className='loader'>
-                <img src={jarvisLogo} alt='Loading...' />
-              </div>
-            )}
-          </ul>
+        <div className='buttons' onClick={resetChat}>
+          Reset Chat
         </div>
-        <div className="task-wrapper">
-          <Tasks tasks={taskbarName} />
-        </div>
-        <div className='input-wrapper'>
-          <button className='send' onClick={getResponse}>
-            <i className='fa-solid fa-paper-plane'></i>
-          </button>
-          <button className='sends' onClick={startListening}>
-            <i className='fa-solid fa-microphone'></i>
-          </button>
-          <input
-            id='input'
-            placeholder='Ask J.A.R.V.I.S'
-            onKeyDown={(e) => e.key === 'Enter' && getResponse()}
-          />
-        </div>
+        <img src={jarvisLogo} alt='Jarvis Logo' />
+        <h1>J.A.R.V.I.S</h1>
+      </nav>
+
+      <div className='ham-burger' ref={navRef}>
+        <ul>
+          <li><div className='voice-mode-toggle' onClick={() => { ison ? setIson(false) : setIson(true), document.querySelector('.voice-mode-toggle').classList.toggle('activate') }}>Jarvis-Mode</div></li>
+          <li>
+            <button onClick={() => { resetChat(); toggleNav(); }}>DELETE CHAT</button>
+          </li>
+          <li>
+            <a onClick={toggleNav}>AI</a>
+          </li>
+          <li>
+            <a href='https://portfolio-jram-18.netlify.app/#about'>CREATOR</a>
+          </li>
+          <li onClick={() => { document.getElementById("Confirm").classList.toggle("act") }}><div className="Logout" id='Logout' >Log Out</div></li>
+          <li><div className="Confirm" id='Confirm'>
+            <h1>Log Out</h1>
+            <p>Are you Sure?</p>
+            <div className="Log-buttons">
+              <button className='btn-1' onClick={() => { document.getElementById("Confirm").classList.toggle("act") }}>No</button>
+              <button className='btn-2' onClick={Loggout}>Log Out</button>
+            </div>
+          </div></li>
+        </ul>
       </div>
-    </div >
-  );
+
+      <div className='chat' ref={chatRef}>
+        <ul className='chat-list'>
+          {messages.map((msg, index) => (
+            <li key={index} className={msg.sender}>
+              <span dangerouslySetInnerHTML={{ __html: msg.message }} />
+            </li>
+          ))}
+
+
+          {loaderRef && (
+            <div className='loader'>
+              <img src={jarvisLogo} alt='Loading...' />
+            </div>
+          )}
+        </ul>
+      </div>
+      <div className="task-wrapper">
+        <Tasks tasks={taskbarName} />
+      </div>
+      <div className='input-wrapper'>
+        <button className='send' onClick={getResponse}>
+          <i className='fa-solid fa-paper-plane'></i>
+        </button>
+        <button className='sends' onClick={startListening}>
+          <i className='fa-solid fa-microphone'></i>
+        </button>
+        <input
+          id='input'
+          placeholder='Ask J.A.R.V.I.S'
+          onKeyDown={(e) => e.key === 'Enter' && getResponse()}
+        />
+      </div>
+    </div>
+  </div >
+);
 };
 
 export default AiPage;
