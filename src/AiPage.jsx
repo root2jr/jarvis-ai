@@ -47,7 +47,7 @@ const AiPage = () => {
 
   useEffect(() => {
     const userfunc = async () => {
-      const usernamee = await axios.get('https://jarvis-ai-1.onrender.com/username', {
+      const usernamee = await axios.get('https://copper-yielding-care.glitch.me/username', {
         headers: {
           Authorization: `Bearer ${jwt}`
         }
@@ -78,7 +78,7 @@ const AiPage = () => {
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const res = await axios.get(`https://jarvis-ai-8pr6.onrender.com/conversations/${usersname}`, {
+        const res = await axios.get(`https://copper-yielding-care.glitch.me/conversations/${usersname}`, {
           headers: {
             Authorization: `Bearer ${jwt}`
           }
@@ -127,7 +127,7 @@ const AiPage = () => {
 
 
     requests.push(
-      axios.post('https://jarvis-ai-8pr6.onrender.com/conversations', {
+      axios.post('https://copper-yielding-care.glitch.me/conversations', {
         sender: message.sender,
         message: message.message,
         timestamp,
@@ -340,7 +340,7 @@ const AiPage = () => {
 
     try {
       setLoaderRef(true);
-      const res = await axios.post('https://jarvis-ai-8pr6.onrender.com/api/gemini', {
+      const res = await axios.post('https://copper-yielding-care.glitch.me/api/gemini', {
         prompt: message,
         conversationId: userid,
         username: usersname
@@ -402,14 +402,14 @@ const AiPage = () => {
 
 
   const resetChat = async () => {
-    const deletechat = await axios.post(`https://jarvis-ai-8pr6.onrender.com/convoss/${usersname}`, {}, {
+    const deletechat = await axios.post(`https://copper-yielding-care.glitch.me/convoss/${usersname}`, {}, {
       headers: {
         Authorization: `Bearer ${jwt}`
       }
     });
     setMessages([
       { sender: 'user', message: "Wake Up J.A.R.V.I.S, Daddy's Home" },
-      { sender: 'bot', message: "Welcome Home Sir, What are we going to work on today?" },
+      { sender: 'bot', message: "Welcome Home Sir, What are we going to work on today?"},
     ]);
   };
 
