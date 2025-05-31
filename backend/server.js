@@ -22,6 +22,9 @@ const API_KEY = process.env.API_KEY;
 const MONGO_URI = process.env.MONGO_URI;
 const PORT = process.env.PORT;
 const JWT_SECRET = process.env.JWT_SECRET;
+const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+
 
 
 mongoose.connect(MONGO_URI)
@@ -370,7 +373,7 @@ app.post("/tasks", async (req, res) => {
 
 const sendTelegramMessage = async (text) => {
   try {
-    const url = `https://api.telegram.org/bot7723966124:AAGUeYL2gEai6dDXUnS76pFYpLWVCB5CKxo/sendMessage`;
+    const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
     await axios.post(url, {
       chat_id: TELEGRAM_CHAT_ID,
       text,
