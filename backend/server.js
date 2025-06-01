@@ -23,7 +23,7 @@ const MONGO_URI = process.env.MONGO_URI;
 const PORT = process.env.PORT;
 const JWT_SECRET = process.env.JWT_SECRET;
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
-let TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
 
 mongoose.connect(MONGO_URI)
