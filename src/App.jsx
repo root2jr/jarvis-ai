@@ -45,7 +45,10 @@ function Lander() {
           />
         </div>
 
-        <nav><h1>JARVIS AI</h1></nav>
+        <nav>
+          <h1>JARVIS AI</h1>
+          <p>Powered by Gemini AI</p>
+        </nav>
         <Threed />
         <div onClick={() => navigate('/login')} className="batton">
           <ShinyText text="JARVIS AI" disabled={false} speed={3} className="custom-class" />

@@ -34,6 +34,14 @@ nav{
     font-family: 'Orbitron';
     text-align: center;
     justify-items: center;
+    display: flex;
+    flex-direction: column;
+}
+nav p{
+    padding-top: 5px;
+    font-size: 10px;
+    text-align: center;
+    padding-left: 10px;
 }
 nav h1{
     margin-top: 20px;
