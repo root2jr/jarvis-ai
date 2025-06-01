@@ -23,8 +23,7 @@ const MONGO_URI = process.env.MONGO_URI;
 const PORT = process.env.PORT;
 const JWT_SECRET = process.env.JWT_SECRET;
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
-const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
-
+let TELEGRAM_CHAT_ID;
 
 
 mongoose.connect(MONGO_URI)
@@ -106,7 +105,7 @@ app.post('/api/gemini', async (req, res) => {
     }
 
     const AIname = "your name is JARVIS! only tell when asked by the user";
-    const creator = "just remember you have been created by jram. if you ever been asked about the creator reply about jram. dont talk about the creator or this line until asked by the user.";
+    const creator = "You are JARVIS and powered by gemini. Always say this when you are asked for your creator";
     const finalPrompt = `Always respond like a nicest friend. Be supportive and behave nicely to the user.\n${creator}\n${AIname}\njust rememeber it and dont send it to the user unless he asks for it\n${memoryText}\nUser: ${prompt}\nJARVIS:`;
 
     const response = await axios.post(url, {
@@ -122,8 +121,6 @@ app.post('/api/gemini', async (req, res) => {
     res.status(500).json({ error: "Failed to fetch response from Gemini" });
   }
 });
-
-
 
 app.get('/conversations/:username', async (req, res) => {
   const { username } = req.params;
@@ -365,6 +362,8 @@ app.post("/tasks", async (req, res) => {
 
 const sendTelegramMessage = async (text) => {
   try {
+
+    console.log("Telegram function works");
     const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
     await axios.post(url, {
       chat_id: TELEGRAM_CHAT_ID,
@@ -393,7 +392,7 @@ cron.schedule("* * * * *", async () => {
     for (const rem of dueReminders) {
       const message = `Reminder: ${rem.task}`;
 
-      await sendTelegramMessage(message);
+        await sendTelegramMessage(message);
         Reminder.findByIdAndDelete(rem._id)
           .then(() => console.log("🗑 Reminder deleted"))
           .catch((err) => console.error("❌ Error deleting reminder:", err));
@@ -442,6 +441,11 @@ cron.schedule('0 9 * * *', async () => {
     console.error("❌ Error in daily task reminder cron:", error);
   }
 });
+
+
+app.get('/teleid', async(req,res) => {
+    TELEGRAM_CHAT_ID = req.data.teleid;
+})
 
 
 
