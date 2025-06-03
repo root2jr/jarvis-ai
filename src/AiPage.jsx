@@ -305,7 +305,7 @@ const AiPage = () => {
     if (isTaskMessage(message)) {
 
       const parsedmessa = parseTasks(message);
-      const aiBotReply = await axios.post('https://jarvis-ai-8pr6.onrender.com/api/gemini', {
+      const aiBotReply = await axios.post('https://localhost:5000/api/gemini', {
         prompt: `you are sending the user a reminding message as JARVIS for this'${parsedmess.task}',make it in a single line`
       }, {
         headers: {

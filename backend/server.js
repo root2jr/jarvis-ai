@@ -6,24 +6,16 @@ import mongoose from 'mongoose'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
 import nodemailer from 'nodemailer'
-import cron from 'node-cron';
-
 
 dotenv.config();
 const app = express();
 app.use(express.json());
-app.use(cors({
-    origin: 'https://j-a-r-v-i-s-ai.netlify.app',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    credentials: true,
-}));
+app.use(cors());
 
 const API_KEY = process.env.API_KEY;
 const MONGO_URI = process.env.MONGO_URI;
 const PORT = process.env.PORT;
 const JWT_SECRET = process.env.JWT_SECRET;
-const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
-const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
 
 mongoose.connect(MONGO_URI)
@@ -53,14 +45,7 @@ let name = "";
 
 app.post('/conversations', async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (!decoded || !decoded.username) {
-      return res.status(401).json({ error: 'Invalid token' });
-    }
+   
     const { sender, message, timestamp, conversationId, username } = req.body;
     name = username;
     const newMessage = { sender, message, timestamp, username };
@@ -80,22 +65,11 @@ app.post('/conversations', async (req, res) => {
 
 
 app.post('/api/gemini', async (req, res) => {
-
   try {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (!decoded || !decoded.username) {
-      return res.status(401).json({ error: 'Invalid token' });
-    }
     const { prompt, username } = req.body;
     const convo = await Model.findOne({ username });
-
-
+    console.log(prompt);
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
-
     let memoryText = "";
     if (convo && convo.messages.length > 0) {
       const recentMessages = convo.messages.slice(-6);
@@ -104,12 +78,18 @@ app.post('/api/gemini', async (req, res) => {
         .join('\n');
     }
 
-    const AIname = "your name is JARVIS! only tell when asked by the user";
-    const creator = "You are JARVIS and powered by gemini. Always say this when you are asked for your creator";
-    const finalPrompt = `Always respond like a nicest friend. Be supportive and behave nicely to the user.\n${creator}\n${AIname}\njust rememeber it and dont send it to the user unless he asks for it\n${memoryText}\nUser: ${prompt}\nJARVIS:`;
+    const finalPrompt = `your name is JARVIS! only tell when asked by the user. Always respond like a nicest friend. Be supportive and behave nicely to the user. You are JARVIS and powered by gemini. Always say this when you are asked for your creator.\njust remember it and don't send it to the user unless he asks for it\n${memoryText}\nUser: ${prompt}\nJARVIS:`;
+
+    const cleanPrompt = finalPrompt.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
 
     const response = await axios.post(url, {
-      contents: [{ parts: [{ text: finalPrompt }] }],
+      prompt: {
+        content: [
+          { text: cleanPrompt }
+        ]
+      }
+    }, {
+      headers: { 'Content-Type': 'application/json' }
     });
 
     const aiResponse = response.data.candidates[0].content.parts[0].text;
@@ -117,21 +97,16 @@ app.post('/api/gemini', async (req, res) => {
 
     console.log('Response Received Successfully!', JSON.stringify(response.data, null, 2));
   } catch (error) {
-    console.error("Error calling Gemini API:", error);
+    console.error("Error calling Gemini API:", error.response?.data || error.message);
     res.status(500).json({ error: "Failed to fetch response from Gemini" });
   }
 });
 
+
+
+
 app.get('/conversations/:username', async (req, res) => {
   const { username } = req.params;
-  const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (!decoded || !decoded.username) {
-      return res.status(401).json({ error: 'Invalid token' });
-    }
 
   try {
     const userConvo = await Model.findOne({ username: username });
@@ -151,13 +126,6 @@ app.post('/convoss/:username', async (req, res) => {
   try {
     const { username } = req.params;
     const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (!decoded || !decoded.username) {
-      return res.status(401).json({ error: 'Invalid token' });
-    }
     const deleteConvo = await Model.findOneAndDelete({ username });
 
     if (deleteConvo) {
@@ -188,6 +156,14 @@ app.post('/login', async (req, res) => {
         const { usermail, password, change } = req.body;
         name = usermail;
         if (change) {
+            const token = req.headers.authorization?.split(' ')[1];
+            if (!token) {
+                return res.status(401).json({ error: 'Unauthorized' });
+            }
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            if (!decoded || !decoded.username) {
+                return res.status(401).json({ error: 'Invalid token' });
+            }
             const hashedpass = await bcrypt.hash(password, saltRounds);
             const changeUserpassword = await model.findOneAndUpdate({ usermail }, { password: hashedpass });
             console.log('Password changed successfully');
@@ -208,8 +184,9 @@ app.post('/login', async (req, res) => {
             } else {
                 const encryptedPassword = await bcrypt.hash(password, saltRounds);
                 const newUser = new model({ usermail, password: encryptedPassword });
+                const token = jwt.sign({username: newUser}, JWT_SECRET,{expiresIn:"7d"});
                 await newUser.save();
-                return res.json({ status: 'ok', message: 'New user created' });
+                return res.json({ status: 'ok', message: 'New user created', token: token });
             }
 
         }
@@ -263,181 +240,6 @@ app.post('/otp', async (req, res) => {
     }
 });
 
-const reminderSchema = new mongoose.Schema({
-  _id: { type: mongoose.Schema.Types.ObjectId, auto: true },
-  username: String,
-  intent: String,
-  datetime: Date,
-  task: String,
-});
-const Reminder = mongoose.model("Reminder", reminderSchema);
-
-
-
-
-
-app.post("/reminders", async (req, res) => {
-  try {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (!decoded || !decoded.username) {
-      return res.status(401).json({ error: 'Invalid token' });
-    }
-    const { username, datetime, intent, task } = req.body;
-
-    if (!username) return res.status(400).send("Reminder name is required.");
-    const updatedReminder = await new Reminder({
-      username,
-      datetime,
-      intent,
-      task
-    });
-    await updatedReminder.save();
-
-    console.log(" Reminder Saved:", updatedReminder);
-    res.send("Reminder Saved Successfully!");
-  } catch (error) {
-    console.error(" Error Saving Reminder:", error);
-    res.status(500).send("Server Error");
-  }
-});
-
-
-const TaskSchema = new mongoose.Schema({
-  username: String,
-  intent: String,
-  datetime: Date,
-  task: String,
-})
-
-const TaskModel = mongoose.model("Task", TaskSchema)
-
-
-
-
-
-
-
-app.post("/tasks", async (req, res) => {
-  try {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (!decoded || !decoded.username) {
-      return res.status(401).json({ error: 'Invalid token' });
-    }
-    const { username, datetime, intent, task } = req.body;
-
-    if (!username) return res.status(400).send("Reminder name is required.");
-    const updatedTask = await new TaskModel({
-      username,
-      datetime,
-      intent,
-      task
-    });
-    await updatedTask.save();
-
-
-
-    console.log(" Task Added:", updatedTask);
-    res.send("Task Added");
-  } catch (error) {
-    console.error(" Error Adding task:", error);
-    res.status(500).send("Server Error");
-  }
-});
-
-const sendTelegramMessage = async (text) => {
-  try {
-
-    console.log("Telegram function works");
-    const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
-    await axios.post(url, {
-      chat_id: TELEGRAM_CHAT_ID,
-      text,
-    });
-    console.log(" Telegram message sent.");
-  } catch (err) {
-    console.error("Telegram message failed:", err.message);
-  }
-};
-
-
-
-cron.schedule("* * * * *", async () => {
-  const now = new Date();
-  now.setSeconds(0);
-  now.setMilliseconds(0);
-
-  console.log(`⏰ Cron Job running at IST ${now.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' })}`);
-
-  try {
-    const dueReminders = await Reminder.find({
-      datetime: { $gte: now, $lte: new Date(now.getTime() + 59000) }
-    });
-
-    for (const rem of dueReminders) {
-      const message = `Reminder: ${rem.task}`;
-
-        await sendTelegramMessage(message);
-        Reminder.findByIdAndDelete(rem._id)
-          .then(() => console.log("🗑 Reminder deleted"))
-          .catch((err) => console.error("❌ Error deleting reminder:", err));
-      
-    }
-
-  } catch (error) {
-    console.error("❌ Error Checking Reminders:", error);
-  }
-});
-
-cron.schedule('0 9 * * *', async () => {
-  console.log("🕘 Daily Task Reminder Cron Triggered!");
-
-  const istNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
-  const today = new Date(istNow.toDateString());
-  const tomorrow = new Date(today);
-  tomorrow.setDate(today.getDate() + 1);
-
-  try {
-    const upcomingTasks = await TaskModel.find({
-      datetime: { $gte: today, $lt: tomorrow },
-    });
-
-    console.log('✅ Cron is checking for tasks');
-
-    if (upcomingTasks.length === 0) {
-      console.log("📆 No upcoming tasks today.");
-      return;
-    }
-
-    for (const task of upcomingTasks) {
-      const dueDate = new Date(task.datetime).toLocaleString('en-IN', {
-        timeZone: 'Asia/Kolkata',
-      });
-
-      const message = `📌 Daily Reminder: Your task "${task.task}" is due on ${dueDate}`;
-      try {
-        await sendTelegramMessage(message);
-        console.log("📨 Daily reminder sent for:", task.task);
-      } catch (err) {
-        console.error("❌ Error sending daily Telegram reminder:", err);
-      }
-    }
-  } catch (error) {
-    console.error("❌ Error in daily task reminder cron:", error);
-  }
-});
-
-
-app.get('/teleid', async(req,res) => {
-    TELEGRAM_CHAT_ID = req.data.teleid;
-})
 
 
 
