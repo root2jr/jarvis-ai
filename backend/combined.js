@@ -93,7 +93,7 @@ app.post('/api/gemini', async (req, res) => {
 
     console.log('Response Received Successfully!', JSON.stringify(response.data, null, 2));
   } catch (error) {
-    console.error("Error calling Gemini API:", error);
+    console.error("Error calling Gemini API:", error.response.data || error.message);
     res.status(500).json({ error: "Failed to fetch response from Gemini" });
   }
 });

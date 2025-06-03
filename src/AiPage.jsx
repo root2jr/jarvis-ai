@@ -519,7 +519,7 @@ const AiPage = () => {
           <Tasks tasks={taskbarName} />
         </div>
         <div className='input-wrapper'>
-          <button className='send' onClick={getResponse}>
+          <button className='send' onClick={setMessages({sender: 'bot', message:"A kind message from Jayaram, Thanks for Visiting my site. The Site is currently under maintenance"})}>
             <i className='fa-solid fa-paper-plane'></i>
           </button>
           <button className='sends' onClick={startListening}>
@@ -528,7 +528,7 @@ const AiPage = () => {
           <input
             id='input'
             placeholder='Ask J.A.R.V.I.S'
-            onKeyDown={(e) => e.key === 'Enter' && getResponse()}
+            onKeyDown={(e) => e.key === 'Enter' && setMessages({sender: 'bot', message:"A kind message from Jayaram, Thanks for Visiting my site. The Site is currently under maintenance"})}
           />
         </div>
       </div>
