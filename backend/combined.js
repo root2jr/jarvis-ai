@@ -214,8 +214,9 @@ app.post('/login', async (req, res) => {
             } else {
                 const encryptedPassword = await bcrypt.hash(password, saltRounds);
                 const newUser = new model({ usermail, password: encryptedPassword });
+                const token = jwt.sign({username: newUser}, JWT_SECRET,{expiresIn:"7d"});
                 await newUser.save();
-                return res.json({ status: 'ok', message: 'New user created' });
+                return res.json({ status: 'ok', message: 'New user created', token: token });
             }
 
         }
