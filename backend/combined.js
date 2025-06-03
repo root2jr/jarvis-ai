@@ -10,11 +10,7 @@ import nodemailer from 'nodemailer'
 dotenv.config();
 const app = express();
 app.use(express.json());
-app.use(cors({
-    origin: 'https://j-a-r-v-i-s-ai.netlify.app',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    credentials: true,
-}));
+app.use(cors());
 
 const API_KEY = process.env.API_KEY;
 const MONGO_URI = process.env.MONGO_URI;
