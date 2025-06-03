@@ -45,7 +45,7 @@ function Lander() {
           />
         </div>
 
-        <nav>
+        <nav className='index-nav'>
           <h1>JARVIS AI</h1>
           <p>Powered by Gemini AI</p>
         </nav>

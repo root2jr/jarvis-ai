@@ -341,7 +341,7 @@ const AiPage = () => {
         }
 
       });
-      const remmess = aiBotReply.data.response.replace(/<\/?p[^>]*>/gi, '');;
+      const remmess = aiBotReply.data.response.replace(/<\/?p[^>]*>/gi, '');
 
       const sendReminder = await axios.post("https://jarvis-ai-8pr6.onrender.com/reminders", {
         username: usersname,
@@ -475,6 +475,7 @@ const AiPage = () => {
         </nav>
 
         <div className='ham-burger' ref={navRef}>
+          <p className='pow'>Powered by Gemini AI</p>
           <ul>
             <li><div className='voice-mode-toggle' onClick={() => { ison ? setIson(false) : setIson(true), document.querySelector('.voice-mode-toggle').classList.toggle('activate') }}>Jarvis-Mode</div></li>
             <li>

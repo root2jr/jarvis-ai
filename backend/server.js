@@ -188,14 +188,6 @@ app.post('/login', async (req, res) => {
         const { usermail, password, change } = req.body;
         name = usermail;
         if (change) {
-            const token = req.headers.authorization?.split(' ')[1];
-            if (!token) {
-                return res.status(401).json({ error: 'Unauthorized' });
-            }
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            if (!decoded || !decoded.username) {
-                return res.status(401).json({ error: 'Invalid token' });
-            }
             const hashedpass = await bcrypt.hash(password, saltRounds);
             const changeUserpassword = await model.findOneAndUpdate({ usermail }, { password: hashedpass });
             console.log('Password changed successfully');
