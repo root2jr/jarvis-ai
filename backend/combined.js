@@ -65,9 +65,7 @@ app.post('/conversations', async (req, res) => {
 
 
 app.post('/api/gemini', async (req, res) => {
-
   try {
-  
     const { prompt, username } = req.body;
     const convo = await Model.findOne({ username });
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
@@ -80,12 +78,18 @@ app.post('/api/gemini', async (req, res) => {
         .join('\n');
     }
 
-    const AIname = "your name is JARVIS! only tell when asked by the user";
-    const creator = "You are JARVIS and powered by gemini. Always say this when you are asked for your creator";
-    const finalPrompt = `your name is JARVIS! only tell when asked by the user.Always respond like a nicest friend. Be supportive and behave nicely to the user.You are JARVIS and powered by gemini. Always say this when you are asked for your creator.\njust rememeber it and dont send it to the user unless he asks for it\n${memoryText}\nUser: ${prompt}\nJARVIS:`;
+    const finalPrompt = `your name is JARVIS! only tell when asked by the user. Always respond like a nicest friend. Be supportive and behave nicely to the user. You are JARVIS and powered by gemini. Always say this when you are asked for your creator.\njust remember it and don't send it to the user unless he asks for it\n${memoryText}\nUser: ${prompt}\nJARVIS:`;
+
+    const cleanPrompt = finalPrompt.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
 
     const response = await axios.post(url, {
-      contents: [{ parts: [{ text: finalPrompt }] }],
+      prompt: {
+        content: [
+          { text: cleanPrompt }
+        ]
+      }
+    }, {
+      headers: { 'Content-Type': 'application/json' }
     });
 
     const aiResponse = response.data.candidates[0].content.parts[0].text;
@@ -93,10 +97,11 @@ app.post('/api/gemini', async (req, res) => {
 
     console.log('Response Received Successfully!', JSON.stringify(response.data, null, 2));
   } catch (error) {
-    console.error("Error calling Gemini API:", error.response.data || error.message);
+    console.error("Error calling Gemini API:", error.response?.data || error.message);
     res.status(500).json({ error: "Failed to fetch response from Gemini" });
   }
 });
+
 
 
 
