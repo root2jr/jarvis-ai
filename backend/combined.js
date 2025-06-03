@@ -70,8 +70,6 @@ app.post('/api/gemini', async (req, res) => {
   
     const { prompt, username } = req.body;
     const convo = await Model.findOne({ username });
-
-
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
 
     let memoryText = "";
@@ -104,7 +102,6 @@ app.post('/api/gemini', async (req, res) => {
 
 app.get('/conversations/:username', async (req, res) => {
   const { username } = req.params;
-  const token = req.headers.authorization?.split(' ')[1];
 
   try {
     const userConvo = await Model.findOne({ username: username });
@@ -206,14 +203,6 @@ const otpmodel = mongoose.model('otp', otpSchema, 'otp');
 
 app.post('/otp', async (req, res) => {
     const { usermail, otp } = req.body;
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (!decoded || !decoded.username) {
-      return res.status(401).json({ error: 'Invalid token' });
-    }
     const otpauth = await otpmodel({ email: usermail, otp: otp });
     otpauth.save();
     console.log("Email saved");
