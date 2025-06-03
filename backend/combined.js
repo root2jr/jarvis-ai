@@ -78,14 +78,7 @@ app.post('/conversations', async (req, res) => {
 app.post('/api/gemini', async (req, res) => {
 
   try {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (!decoded || !decoded.username) {
-      return res.status(401).json({ error: 'Invalid token' });
-    }
+  
     const { prompt, username } = req.body;
     const convo = await Model.findOne({ username });
 
