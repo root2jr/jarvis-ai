@@ -45,14 +45,7 @@ let name = "";
 
 app.post('/conversations', async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (!decoded || !decoded.username) {
-      return res.status(401).json({ error: 'Invalid token' });
-    }
+   
     const { sender, message, timestamp, conversationId, username } = req.body;
     name = username;
     const newMessage = { sender, message, timestamp, username };
@@ -112,13 +105,6 @@ app.post('/api/gemini', async (req, res) => {
 app.get('/conversations/:username', async (req, res) => {
   const { username } = req.params;
   const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (!decoded || !decoded.username) {
-      return res.status(401).json({ error: 'Invalid token' });
-    }
 
   try {
     const userConvo = await Model.findOne({ username: username });
@@ -138,13 +124,6 @@ app.post('/convoss/:username', async (req, res) => {
   try {
     const { username } = req.params;
     const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (!decoded || !decoded.username) {
-      return res.status(401).json({ error: 'Invalid token' });
-    }
     const deleteConvo = await Model.findOneAndDelete({ username });
 
     if (deleteConvo) {
