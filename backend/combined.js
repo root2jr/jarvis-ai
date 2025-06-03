@@ -68,8 +68,8 @@ app.post('/api/gemini', async (req, res) => {
   try {
     const { prompt, username } = req.body;
     const convo = await Model.findOne({ username });
+    console.log(prompt);
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
-
     let memoryText = "";
     if (convo && convo.messages.length > 0) {
       const recentMessages = convo.messages.slice(-6);
