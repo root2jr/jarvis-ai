@@ -7,7 +7,7 @@ import Tasks from './Tasks';
 import * as chrono from "chrono-node";
 import postImg from './Capture.jpg'
 import { useNavigate } from 'react-router-dom';
-
+import { jwtDecode } from 'jwt-decode'
 
 const AiPage = () => {
   const navigate = useNavigate();
@@ -21,8 +21,10 @@ const AiPage = () => {
 
 
   const [ison, setIson] = useState(false);
-  const usersname = localStorage.getItem('usersmail');
   const jwt = localStorage.getItem('token');
+  const decodedJwt = jwtDecode(jwt);
+  const usersname = decodedJwt.username.usermail;
+
   useEffect(() => {
     if (!usersname) {
       localStorage.clear();
@@ -41,7 +43,6 @@ const AiPage = () => {
     let storedTasks = localStorage.getItem("tasks");
     if (storedTasks) {
       setTaskbarName(JSON.parse(storedTasks));
-      console.log(taskbarName);
     }
   }, [])
 
@@ -228,11 +229,9 @@ const AiPage = () => {
     let datetime = null;
 
     const parsedDate = chrono.parseDate(text);
-    console.log(parsedDate);
     if (parsedDate) {
       datetime = parsedDate.toISOString();
       const chronoResult = chrono.parse(text);
-      console.log(chronoResult);
       if (chronoResult.length > 0) {
         text = text.replace(chronoResult[0].text, "").trim();
       }
@@ -240,7 +239,6 @@ const AiPage = () => {
 
     task = text.replace(/remind me to|set me a reminder to|alert me about|remind me that/, "").trim();
 
-    console.log({ intent, task, datetime });
     return { intent, task, datetime };
   }
   function parseTasks(text) {
@@ -249,11 +247,9 @@ const AiPage = () => {
     let datetime = null;
 
     const parsedDate = chrono.parseDate(text);
-    console.log(parsedDate);
     if (parsedDate) {
       datetime = parsedDate.toISOString();
       const chronoResult = chrono.parse(text);
-      console.log(chronoResult);
       if (chronoResult.length > 0) {
         text = text.replace(chronoResult[0].text, "").trim();
       }
@@ -261,7 +257,6 @@ const AiPage = () => {
 
     task = text.replace(/"add task|note down|remember to |schedule me/, "").trim();
 
-    console.log({ intent, task, datetime });
     return { intent, task, datetime };
   }
 
@@ -305,8 +300,8 @@ const AiPage = () => {
     if (isTaskMessage(message)) {
 
       const parsedmessa = parseTasks(message);
-      const aiBotReply = await axios.post('https://localhost:5000/api/gemini', {
-        prompt: `you are sending the user a reminding message as JARVIS for this'${parsedmess.task}',make it in a single line`
+      const aiBotReply = await axios.post('https://jarvis-ai-8pr6.onrender.com/api/gemini', {
+        prompt: `you are sending the user a reminding message as JARVIS for this'${parsedmessa.task}',make it in a single line`
       }, {
         headers: {
           Authorization: `Bearer ${jwt}`
@@ -372,12 +367,13 @@ const AiPage = () => {
         : res.data.response;
       botMessageText = formatGeminiResponse(botMessageText);
       const botMessage = { sender: 'bot', message: botMessageText };
+      const savebotMessage = { sender: 'bot', message: res.data.response };
       setMessages((prev) => [...prev, botMessage]);
       if (ison) {
         const speakableres = res.data.response.replace(/<\/?p[^>]*>/gi, '');;
         speak(speakableres);
       }
-      saveData(botMessage, userid);
+      saveData(savebotMessage, userid);
     } catch (err) {
       console.error('Error fetching response:', err);
     } finally {
@@ -472,12 +468,13 @@ const AiPage = () => {
           </div>
           <img src={jarvisLogo} alt='Jarvis Logo' />
           <h1>J.A.R.V.I.S</h1>
+          <p id='info'>i<p className='warning'> Uses Google Gemini. AI responses may be inaccurate or inappropriate. Inputs are stored for history purposes. Don’t enter personal info.</p></p>
         </nav>
 
         <div className='ham-burger' ref={navRef}>
           <p className='pow'>Powered by Gemini AI</p>
           <ul>
-            <li><div className='voice-mode-toggle' onClick={() => { ison ? setIson(false) : setIson(true), document.querySelector('.voice-mode-toggle').classList.toggle('activate') }}>Jarvis-Mode</div></li>
+            <li><div className='voice-mode-toggle' onClick={() => { ison ? setIson(false) : setIson(true), document.querySelector('.voice-mode-toggle').classList.toggle('activate') }}>Voice-Mode</div></li>
             <li>
               <button onClick={() => { resetChat(); toggleNav(); }}>DELETE CHAT</button>
             </li>
@@ -519,7 +516,7 @@ const AiPage = () => {
           <Tasks tasks={taskbarName} />
         </div>
         <div className='input-wrapper'>
-          <button className='send' onClick={setMessages({sender: 'bot', message:"A kind message from Jayaram, Thanks for Visiting my site. The Site is currently under maintenance"})}>
+          <button className='send' onClick={getResponse}>
             <i className='fa-solid fa-paper-plane'></i>
           </button>
           <button className='sends' onClick={startListening}>
@@ -528,8 +525,9 @@ const AiPage = () => {
           <input
             id='input'
             placeholder='Ask J.A.R.V.I.S'
-            onKeyDown={(e) => e.key === 'Enter' && setMessages({sender: 'bot', message:"A kind message from Jayaram, Thanks for Visiting my site. The Site is currently under maintenance"})}
+            onKeyDown={(e) => e.key === 'Enter' && getResponse()}
           />
+          <p className='info '>i<p className='warning'> Uses Google Gemini. AI responses may be inaccurate or inappropriate. Inputs are stored for history purposes temporarily. Don’t enter personal info.</p></p>
         </div>
       </div>
     </div >

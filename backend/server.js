@@ -90,7 +90,6 @@ app.post('/api/gemini', async (req, res) => {
     const convo = await Model.findOne({ username });
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
-    // use gemini-1.5-flash or gemini-1.5-pro — officially supported free versions
 
     let memoryText = "";
     if (convo?.messages?.length > 0) {
