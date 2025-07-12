@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@google-cloud/text-to-speech": "^6.0.1",
-    "@react-three/drei": "^10.0.4",
+    "@react-three/drei": "^10.1.2",
     "@react-three/fiber": "^9.1.0",
     "axios": "^1.8.4",
     "bcrypt": "^5.1.1",
@@ -24,6 +24,7 @@
     "fs-extra": "^11.3.0",
     "http": "^0.0.1-security",
     "jsonwebtoken": "^9.0.2",
+    "jwt-decode": "^4.0.0",
     "mongoose": "^8.12.2",
     "node-cron": "^3.0.3",
     "node-telegram-bot-api": "^0.66.0",

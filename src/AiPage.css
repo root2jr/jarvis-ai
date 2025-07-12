@@ -33,6 +33,24 @@ nav {
     left: 0;
 }
 
+.info {
+    width: fit-content;
+    height: fit-content;
+    border-radius: 50%;
+    padding: 3px 12px;
+    border: 1px solid skyblue;
+    margin-left: 5px;
+    margin-top: 10px;
+    transition: .5s ease;
+    cursor: pointer;
+}
+
+.info:hover {
+    background-color: skyblue;
+    color: black;
+    transition: .5s ease;
+}
+
 .content-bg input {
     width: 55%;
     margin-left: 5%;
@@ -178,7 +196,6 @@ nav h1 {
 @media screen and (max-width: 400px) {
     .chat {
         padding-bottom: 220px;
-        /* or however much keeps the input visible */
     }
 }
 
@@ -190,7 +207,8 @@ nav h1 {
     bottom: 0;
     left: 0;
     z-index: 10;
-    /* ensure it stays on top */
+    display: flex;
+    align-items: center;
     backdrop-filter: blur(8px)
 }
 
@@ -371,13 +389,14 @@ nav h1 {
     display: flex;
     flex-direction: column;
     text-align: center;
-    cursor:auto;
-    scale:0;
-    padding:0;
+    cursor: auto;
+    scale: 0;
+    padding: 0;
 }
-.act{
+
+.act {
     transition: .5s ease;
-    scale:1;
+    scale: 1;
 }
 
 .Confirm h1 {
@@ -398,14 +417,15 @@ nav h1 {
     padding-top: 40px;
 }
 
-.Log-buttons button:nth-child(1){
-    border:1px solid black;
+.Log-buttons button:nth-child(1) {
+    border: 1px solid black;
     margin-right: 10px;
     background-color: transparent;
-    color:black;
+    color: black;
     transition: .5s ease;
 }
-.Log-buttons button:nth-child(1):hover{
+
+.Log-buttons button:nth-child(1):hover {
     background-color: rgba(0, 0, 0, 0.288);
 }
 
@@ -413,33 +433,92 @@ nav h1 {
     cursor: pointer;
 
 }
+.info{
+    margin-left: 20px;
+}
+
 @media screen and (min-width:400px) and (max-width:1100px) {
-    .Confirm{
-        width:70%;
-        height:50%;
-        left:15%;
+    .Confirm {
+        width: 70%;
+        height: 50%;
+        left: 15%;
     }
-    .Log-buttons button:nth-child(2){
+
+    .Log-buttons button:nth-child(2) {
         margin-top: 10px;
-        margin-right:10px;
+        margin-right: 10px;
     }
 }
 
 @media screen and (max-width:400px) {
-    .Confirm{
-        width:80%;
-        height:55%;
-        left:10%;
+    .Confirm {
+        width: 80%;
+        height: 55%;
+        left: 10%;
         display: flex;
-        flex-direction:column;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
     }
-     .Log-buttons button:nth-child(2){
+
+    .Log-buttons button:nth-child(2) {
         margin-top: 10px;
     }
-     .Log-buttons button:nth-child(1){
+
+    .Log-buttons button:nth-child(1) {
         margin-left: 0px;
         margin-right: 0px;
+    }
+}
+
+.warning{
+    font-size: 10px;
+    color:black;
+    background-color: white;
+    padding:10px;
+    position: absolute;
+    margin-top: -100px;
+    visibility: hidden;
+}
+.info:hover .warning{
+    visibility: visible;
+}
+@media screen and (min-width:950px) {
+    #info{
+        opacity: 0;
+    }
+}
+@media screen and (max-width:950px) {
+    #info{
+        font-size: 20px;
+        position: absolute;
+        justify-self: flex-end;
+        border:1px solid skyblue;
+        text-align: center;
+        padding:0px 10px;
+        border-radius: 50%;
+        right:20;
+        margin-top: 20px;
+        margin-left: 80%;
+        transition: .5s ease;
+        cursor:pointer
+    }
+    #info:hover .warning{
+        visibility: visible;
+    }
+    #info:hover{
+        background-color: skyblue;
+        color:black;
+        transition: .5s ease;
+        cursor:pointer
+
+    }
+    .info{
+        opacity: 0;
+    }
+    .warning{
+        margin:0px;
+        margin-left: -50px;
+        margin-top:5px;
     }
 }
