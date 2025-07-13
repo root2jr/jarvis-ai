@@ -13,8 +13,8 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 app.use(cors({
-    origin: 'https://j-a-r-v-i-s-ai.netlify.app',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    origin: ['https://j-a-r-v-i-s-ai.netlify.app', 'http://localhost:5173'],
+    methods: ['GET', 'POST'],
     credentials: true,
 }));
 
