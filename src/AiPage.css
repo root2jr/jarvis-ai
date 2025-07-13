@@ -414,6 +414,9 @@ nav h1 {
     align-self: center;
     padding-top: 20px;
 }
+.nav-button{
+    cursor: pointer;
+}
 
 .Log-buttons {
     padding-top: 30px;
