@@ -382,7 +382,7 @@ cron.schedule("* * * * *", async () => {
     });
 
     for (const rem of dueReminders) {
-      const message = `Reminder: ${rem.task}`;
+      const message = `${rem.task}`;
 
         await sendTelegramMessage(message);
         Reminder.findByIdAndDelete(rem._id)
@@ -421,7 +421,7 @@ cron.schedule('0 9 * * *', async () => {
         timeZone: 'Asia/Kolkata',
       });
 
-      const message = `📌 Daily Reminder: Your task "${task.task}" is due on ${dueDate}`;
+      const message = `"${task.task}" Due Date:${dueDate}`;
       try {
         await sendTelegramMessage(message);
         console.log("📨 Daily reminder sent for:", task.task);
