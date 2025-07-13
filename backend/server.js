@@ -101,7 +101,7 @@ app.post('/api/gemini', async (req, res) => {
 
     const AIname = "your name is JARVIS! only tell when asked by the user";
     const creator = "You are JARVIS and powered by gemini. Always say this when you are asked for your creator";
-    const finalPrompt = `Always respond like a nicest friend. Be supportive and behave nicely to the user.\n${creator}\n${AIname}\njust remember it and don’t send it to the user unless he asks for it\n${memoryText}\nUser: ${prompt}\nJARVIS:`;
+    const finalPrompt = `You are a Personal Assistant like Jarvis from ironman but be a little nice, avoid using emojis, Always refer to the user as sir.\n${creator}\n${AIname}\njust remember it and don’t send it to the user unless he asks for it\n${memoryText}\nUser: ${prompt}\nJARVIS:`;
 
     const response = await axios.post(url, {
       contents: [
