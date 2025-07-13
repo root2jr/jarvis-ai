@@ -387,11 +387,14 @@ nav h1 {
     top: 29%;
     left: 30%;
     display: flex;
+    align-items: center;
+    justify-content: center;
     flex-direction: column;
     text-align: center;
     cursor: auto;
     scale: 0;
     padding: 0;
+    border-radius: 20px;
 }
 
 .act {
@@ -402,7 +405,6 @@ nav h1 {
 .Confirm h1 {
     font-size: 30px;
     color: black;
-    padding-top: 10px;
 }
 
 .Confirm p {
@@ -410,11 +412,11 @@ nav h1 {
     font-size: 20px;
     justify-self: center;
     align-self: center;
-    padding-top: 40px;
+    padding-top: 20px;
 }
 
 .Log-buttons {
-    padding-top: 40px;
+    padding-top: 30px;
 }
 
 .Log-buttons button:nth-child(1) {
