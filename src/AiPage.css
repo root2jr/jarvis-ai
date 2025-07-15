@@ -141,6 +141,8 @@ nav {
 
 nav {
     display: flex;
+    align-items: center;
+    justify-content: center;
     height: 75px;
 }
 
@@ -148,13 +150,14 @@ nav img {
     width: 50px;
     height: 50px;
     border-radius: 50%;
-    margin-top: 20px;
     object-fit: cover;
     object-position: center;
 }
 
 nav h1 {
-    margin-left: 10px;
+    margin-left: 15px;
+    text-align: center;
+    margin-bottom: 15px;
 }
 
 .chat ul {

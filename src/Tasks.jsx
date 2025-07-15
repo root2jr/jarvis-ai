@@ -20,7 +20,7 @@ const Tasks = ({tasks}) => {
       <ul>
         {tasks.map((task, index) => (
           <li key={index}>
-            <div>{task.message}</div>
+            <div>{(task.message).replace("add task","")}</div>
           </li>
         ))}
 
