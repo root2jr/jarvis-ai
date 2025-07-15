@@ -161,6 +161,7 @@ const AiPage = () => {
     "alert",
   ];
   const saveKeywords = [
+    "Task:",
     "add task",
     "note down",
     "remember to",
@@ -195,8 +196,6 @@ const AiPage = () => {
 
 
 
-  const [reminderName, setReminderName] = useState("");
-  const [reminderTime, setReminderTime] = useState("");
   const [taskName, setTaskName] = useState("");
 
 
@@ -307,22 +306,21 @@ const AiPage = () => {
           Authorization: `Bearer ${jwt}`
         }
       });
-      const remmess = aiBotReply.data.response.replace(/<\/?p[^>]*>/gi, '');
-      const saveTaskdeadline = await axios.post("https://jarvis-ai-8pr6.onrender.com/tasks", {
-        username: usersname,
-        intent: parsedmessa.intent,
-        datetime: parsedmessa.datetime,
-        task: remmess
-      }, {
-        headers: {
-          Authorization: `Bearer ${jwt}`
-        },
-      })
+        const remmess = aiBotReply.data.response.replace(/JARVIS:/g, '').replace(/<\/?p[^>]*>/gi, ''); 
+        const saveTaskdeadline = await axios.post("https://jarvis-ai-8pr6.onrender.com/tasks", {
+          username: usersname,
+          intent: parsedmessa.intent,
+          datetime: parsedmessa.datetime,
+          task: remmess
+        }, {
+          headers: {
+            Authorization: `Bearer ${jwt}`
+          },
+        })
       setTaskName(parsedmessa.task);
       setTaskbarName((prev) => [...prev, { type: 'task', message: parsedmessa.task }]);
       inputField.value = ""
     }
-
 
 
     else if (isReminderMessage(message)) {
