@@ -35,8 +35,8 @@ const messageSchema = new mongoose.Schema({
   message: String,
   timestamp: String,
   conversationId: String,
-  username: String
-
+  username: String,
+  time: String
 
 })
 
@@ -61,9 +61,9 @@ app.post('/conversations', async (req, res) => {
     if (!decoded || !decoded.username) {
       return res.status(401).json({ error: 'Invalid token' });
     }
-    const { sender, message, timestamp, conversationId, username } = req.body;
+    const { sender, message, timestamp, conversationId, username, time } = req.body;
     name = username;
-    const newMessage = { sender, message, timestamp, username };
+    const newMessage = { sender, message, timestamp, username, time };
     const updatedConversation = await Model.findOneAndUpdate(
       { username },
       { $push: { messages: newMessage } },
@@ -101,7 +101,7 @@ app.post('/api/gemini', async (req, res) => {
 
     const AIname = "your name is JARVIS! only tell when asked by the user";
     const creator = "You are JARVIS and powered by gemini. Always say this when you are asked for your creator";
-    const finalPrompt = `You are a Personal Assistant like Jarvis from ironman but be a little nice, avoid using emojis, Always refer to the user as sir.\n${creator}\n${AIname}\njust remember it and don’t send it to the user unless he asks for it\n${memoryText}\nUser: ${prompt}\nJARVIS:`;
+    const finalPrompt = `You are a Personal Assistant like Jarvis from ironman but be a little nice, avoid using emojis, Always refer to the user as sir.\n${creator}\n${AIname}\njust remember it and don’t send it to the user unless he asks for it\n${memoryText}\nUser: ${prompt}\n`;
 
     const response = await axios.post(url, {
       contents: [
@@ -175,7 +175,8 @@ app.post('/convoss/:username', async (req, res) => {
 
 const Schema = new mongoose.Schema({
     usermail: String,
-    password: String
+    password: String,
+    telegramToken: String
 });
 
 const model = mongoose.model('login', Schema);
@@ -185,7 +186,7 @@ const saltRounds = 10;
 
 app.post('/login', async (req, res) => {
     try {
-        const { usermail, password, change } = req.body;
+        const { usermail, password, change, telegramToken } = req.body;
         name = usermail;
         if (change) {
             const hashedpass = await bcrypt.hash(password, saltRounds);
@@ -207,11 +208,10 @@ app.post('/login', async (req, res) => {
                 }
             } else {
                 const encryptedPassword = await bcrypt.hash(password, saltRounds);
-                const newUser = new model({ usermail, password: encryptedPassword });
+                const newUser = new model({ usermail, password: encryptedPassword, telegramToken: telegramToken  });
                 await newUser.save();
                 return res.json({ status: 'ok', message: 'New user created' });
             }
-
         }
     } catch (err) {
         console.error("Error:", err);
@@ -352,13 +352,14 @@ app.post("/tasks", async (req, res) => {
   }
 });
 
-const sendTelegramMessage = async (text) => {
+const sendTelegramMessage = async (text, username) => {
   try {
 
     console.log("Telegram function works");
+    const telegram_token = await model.findOne({usermail: username});
     const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
     await axios.post(url, {
-      chat_id: TELEGRAM_CHAT_ID,
+      chat_id: telegram_token.telegramToken,
       text,
     });
     console.log(" Telegram message sent.");
@@ -380,11 +381,12 @@ cron.schedule("* * * * *", async () => {
     const dueReminders = await Reminder.find({
       datetime: { $gte: now, $lte: new Date(now.getTime() + 59000) }
     });
+    console.log(dueReminders);
 
     for (const rem of dueReminders) {
       const message = `${rem.task}`;
 
-        await sendTelegramMessage(message);
+        await sendTelegramMessage(message, rem.username);
         Reminder.findByIdAndDelete(rem._id)
           .then(() => console.log("🗑 Reminder deleted"))
           .catch((err) => console.error("❌ Error deleting reminder:", err));
