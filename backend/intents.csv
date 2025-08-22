@@ -1,0 +1,227 @@
+text,label
+"remind me to drink water at 9","reminder"
+"set a reminder for my exam tomorrow","reminder"
+"remind me about the doctor appointment","reminder"
+"please remind me to call mom tonight","reminder"
+"set an alarm for 7am","reminder"
+"remind me every two hours to stretch","reminder"
+"notify me about the match at 8","reminder"
+"remind me to take my medicine at night","reminder"
+"can you remind me about my assignment deadline","reminder"
+"set a reminder for grocery shopping","reminder"
+"make sure I don’t forget my passport tomorrow","reminder"
+"alert me when it’s 5 pm","reminder"
+"remind me to pay electricity bill","reminder"
+"remember to tell me about the dentist visit","reminder"
+"ping me at 10 pm to water the plants","reminder"
+"give me a notification for yoga class","reminder"
+"remind me to submit my homework tonight","reminder"
+"wake me up at 6 in the morning","reminder"
+"remind me about the football match this evening","reminder"
+"alert me to buy milk after work","reminder"
+"set a notification for my friend’s birthday","reminder"
+"create a reminder for dinner with Sarah","reminder"
+"please set an alert for 9am meeting","reminder"
+"don’t let me forget my laptop charger","reminder"
+"remind me to send the email in 2 hours","reminder"
+
+"create a task for finishing my project report","task"
+"add buy groceries to my to-do list","task"
+"make a new task to clean my room","task"
+"add prepare slides to the task list","task"
+"create task for calling the client tomorrow","task"
+"add task: fix the bug in login module","task"
+"put write essay in my tasks","task"
+"note down: revise chapter 3 for tomorrow","task"
+"assign washing the car as a task","task"
+"make a list item for buying vegetables","task"
+"add finish workout to my to-do list","task"
+"create a new work item: study for exam","task"
+"include check email in my tasks","task"
+"add task: plan the birthday party","task"
+"put task for preparing lunch","task"
+"assign task to complete coding homework","task"
+"make a note to practice guitar","task"
+"add cleaning the house to my tasks","task"
+"record task: prepare a report for Monday","task"
+"add task: revise physics notes","task"
+"create a to-do for going to the bank","task"
+"please add laundry to the task list","task"
+"add task to call my teacher tomorrow","task"
+"put new task: research AI topics","task"
+"make a work item to write a blog post","task"
+
+"what’s the weather like today","other"
+"tell me a joke","other"
+"who is the president of India","other"
+"play a song for me","other"
+"open Google","other"
+"how are you","other"
+"what’s the time now","other"
+"translate hello to French","other"
+"give me today’s news","other"
+"who invented the computer","other"
+"tell me something interesting","other"
+"search for pizza recipes","other"
+"what is 2 plus 2","other"
+"who won the cricket match yesterday","other"
+"open my browser","other"
+"play some music","other"
+"how’s the traffic now","other"
+"do you know any fun facts","other"
+"recommend me a movie","other"
+"define artificial intelligence","other"
+"who wrote Harry Potter","other"
+"can you tell me my location","other"
+"what’s trending on Twitter","other"
+"what does DNA stand for","other"
+"tell me about space exploration","other"
+
+text,label
+"set a reminder for 5 pm meeting",reminder
+"remind me to drink water at 8",reminder
+"wake me up at 7 am",reminder
+"add reminder tomorrow 10am doctor",reminder
+"schedule a reminder for mom's birthday",reminder
+"can you ping me at 6?",reminder
+"alert me about groceries tonight",reminder
+"set alarm for morning jog",reminder
+"remind me in 2 hours",reminder
+"remember my appointment at 4",reminder
+"make sure I don’t forget lunch at 1",reminder
+"notify me when it's 9 o’clock",reminder
+"put a reminder for homework deadline",reminder
+"set reminder to call dad",reminder
+"send me alert for bill payment",reminder
+"remind me every day at 6 am",reminder
+"wake me at sunrise tomorrow",reminder
+"don’t let me forget my keys at 10",reminder
+"set an alarm for midnight",reminder
+"notify me to water plants",reminder
+
+"add task buy groceries",task
+"make a task for cleaning room",task
+"write down task finish homework",task
+"add laundry to my todo",task
+"create a task to send email",task
+"remember to finish coding project",task
+"add assignment to my list",task
+"make a note about buying milk",task
+"plan task prepare slides",task
+"add goal workout today",task
+"note down wash the dishes",task
+"put in todo buy fruits",task
+"task: organize files",task
+"create new task pay rent",task
+"add project deadline to todo",task
+"make a task for calling boss",task
+"add to list: check emails",task
+"task is to clean backyard",task
+"make note: submit assignment",task
+"todo: pack for trip",task
+"jot down prepare resume",task
+"add workout to my list",task
+"include call friend in my todos",task
+"task add finish math homework",task
+"task create plan for vacation",task
+
+"hi",other
+"hello there",other
+"how are you?",other
+"what's up?",other
+"tell me a joke",other
+"who are you?",other
+"play a song",other
+"open google",other
+"what's the weather?",other
+"good morning",other
+"good night",other
+"how old are you?",other
+"where do you live?",other
+"thank you",other
+"bye",other
+"what is ai?",other
+"do you know python?",other
+"tell me a story",other
+"let’s chat",other
+"sing a song",other
+"what time is it?",other
+"who made you?",other
+"explain quantum computing",other
+"show me news headlines",other
+"how do I cook pasta?",other
+"play some music",other
+"tell me about mars",other
+"what is machine learning?",other
+"how’s the weather tomorrow?",other
+"search for cat videos",other
+
+
+remind me to call mom at 8,reminder
+pls remind me to drink water,reminder
+ping me about the assignment deadline tmrw,reminder
+hey can u nudge me for meds every night?,reminder
+wake me up at 6 am sharp,reminder
+remember dentist appt fri 3pm,reminder
+dont let me forget to water plants,reminder
+knock me for lunch break,reminder
+set an alert for fee payment date,reminder
+buzz me on bday of rakesh,reminder
+note down to renew subscription in 2 weeks,reminder
+hey remind abt groceries list later,reminder
+call me back about meeting in evening,reminder
+pls shoot a notif for exam day,reminder
+alarm me for gym at 5 am daily,reminder
+set reminder: buy milk tmr,reminder
+notify me about interview schedule monday,reminder
+pls push an alert when its 9pm,reminder
+keep me posted on project deadline,reminder
+remind abt calling teacher later,reminder
+
+add "finish report" to my todo,task
+make a note to clean my desk,task
+schedule task: prepare ppt slides,task
+jot down “fix bug in login page”,task
+track task: book train tickets,task
+add to list: buy groceries,task
+write down project outline,task
+create task for updating jarvis api,task
+add to tasks: call bank for card issue,task
+put “check emails” in todo,task
+log task for revising dsa problems,task
+add coding practice to my list,task
+set task for workout plan,task
+task me with studying maths chapter 3,task
+remember that i need to submit assignment,task
+todo: revise maths chap 4,task
+add work: design poster for fest,task
+list task "clean bike",task
+note task of creating github repo,task
+make task: organize files,task
+
+how’s the weather today?,other
+play some music pls,other
+who won the match yesterday?,other
+tell me a joke,other
+what’s the time now?,other
+open youtube,other
+can u google this for me?,other
+show me today’s news,other
+what does recursion mean?,other
+sing a song,other
+open whatsapp,other
+hey how r u?,other
+gimme a fun fact,other
+calculate 123*45,other
+what’s my ip address?,other
+define AI,other
+whats 10 plus 20,other
+translate hello to spanish,other
+open camera,other
+whats trending today,other
+the potrait of ruth reminds me of my beloved ruth,other
+this smell reminds me of childhood,other
+his smile reminds me of a movie,other
+these lyrics remind me of college days,other
+she reminds me of my sister,other
+

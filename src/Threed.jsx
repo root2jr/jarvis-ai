@@ -13,7 +13,7 @@ const Threed = () => {
           if (window.innerWidth < 768) {
             setScale([1,1,1]); // Decrease scale for small screens
           } else {
-            setScale([1.5,1.5,1.5]); // Default scale
+            setScale([1.25,1.25,1.25]); // Default scale
           }
         };
   
@@ -26,13 +26,13 @@ const Threed = () => {
     
    const Model = () =>{
     const gld = useLoader(GLTFLoader,'/78175.glb');
-    return <primitive object={gld.scene}  position={[0, -1.5, 0]} scale={scale} />
+    return <primitive object={gld.scene}  position={[0, -1, 0]} scale={scale} />
    }
 
 
   return (
 
-      <Canvas style={{width:'100%',height:'500px',background:'transparent',alignContent:'center'}}>
+      <Canvas style={{width:'100%',height:'450px',background:'transparent',alignContent:'center'}}>
       <ambientLight intensity={1} />
       <pointLight position={[0,4,0]} intensity={1} />
       <OrbitControls 

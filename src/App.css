@@ -50,8 +50,8 @@ nav p{
     text-align: center;
     padding-left: 10px;
 }
-nav h1{
-    margin-top: 20px;
+.index-nav{
+    padding-top: 20px;
 }
 @keyframes appear {
     from{

@@ -7,15 +7,15 @@ import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
 import nodemailer from 'nodemailer'
 import cron from 'node-cron';
-
+import { spawn } from 'child_process'
 
 dotenv.config();
 const app = express();
 app.use(express.json());
 app.use(cors({
-    origin: ['https://j-a-r-v-i-s-ai.netlify.app', 'http://localhost:5173'],
-    methods: ['GET', 'POST'],
-    credentials: true,
+  origin: ['https://j-a-r-v-i-s-ai.netlify.app', 'http://localhost:5173'],
+  methods: ['GET', 'POST'],
+  credentials: true,
 }));
 
 const API_KEY = process.env.API_KEY;
@@ -50,6 +50,27 @@ const Model = mongoose.model('Conversation', convoSchema);
 
 
 let name = "";
+
+
+app.post("/predict", (req, res) => {
+  const { text } = req.body;
+
+  const py = spawn("python", ["predict.py", text]);
+
+  let result = "";
+  py.stdout.on("data", (data) => {
+    result += data.toString();
+  });
+
+  py.stderr.on("data", (err) => {
+    console.error("Python error:", err.toString());
+  });
+
+  py.on("close", () => {
+    res.json({ intent: result.trim() });
+  });
+});
+
 
 app.post('/conversations', async (req, res) => {
   try {
@@ -125,13 +146,13 @@ app.post('/api/gemini', async (req, res) => {
 app.get('/conversations/:username', async (req, res) => {
   const { username } = req.params;
   const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (!decoded || !decoded.username) {
-      return res.status(401).json({ error: 'Invalid token' });
-    }
+  if (!token) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  if (!decoded || !decoded.username) {
+    return res.status(401).json({ error: 'Invalid token' });
+  }
 
   try {
     const userConvo = await Model.findOne({ username: username });
@@ -174,9 +195,9 @@ app.post('/convoss/:username', async (req, res) => {
 });
 
 const Schema = new mongoose.Schema({
-    usermail: String,
-    password: String,
-    telegramToken: String
+  usermail: String,
+  password: String,
+  telegramToken: String
 });
 
 const model = mongoose.model('login', Schema);
@@ -185,82 +206,82 @@ const saltRounds = 10;
 
 
 app.post('/login', async (req, res) => {
-    try {
-        const { usermail, password, change, telegramToken } = req.body;
-        name = usermail;
-        if (change) {
-            const hashedpass = await bcrypt.hash(password, saltRounds);
-            const changeUserpassword = await model.findOneAndUpdate({ usermail }, { password: hashedpass });
-            console.log('Password changed successfully');
-        }
-        else {
-            const existingUser = await model.findOne({ usermail });
-
-            if (existingUser) {
-                const compare = await bcrypt.compare(password, existingUser.password);
-                if (compare) {
-                    const token = jwt.sign({ username: existingUser }, JWT_SECRET, { expiresIn: "7d" });
-
-                    return res.send({ status: 'login', message: 'Login accepted', token, usermail });
-
-                } else {
-                    return res.json({ status: 'error', message: 'Wrong credentials' });
-                }
-            } else {
-                const encryptedPassword = await bcrypt.hash(password, saltRounds);
-                const newUser = new model({ usermail, password: encryptedPassword, telegramToken: telegramToken  });
-                await newUser.save();
-                return res.json({ status: 'ok', message: 'New user created' });
-            }
-        }
-    } catch (err) {
-        console.error("Error:", err);
-        return res.status(500).json({ status: 'error', message: 'Something went wrong' });
+  try {
+    const { usermail, password, change, telegramToken } = req.body;
+    name = usermail;
+    if (change) {
+      const hashedpass = await bcrypt.hash(password, saltRounds);
+      const changeUserpassword = await model.findOneAndUpdate({ usermail }, { password: hashedpass });
+      console.log('Password changed successfully');
     }
+    else {
+      const existingUser = await model.findOne({ usermail });
+
+      if (existingUser) {
+        const compare = await bcrypt.compare(password, existingUser.password);
+        if (compare) {
+          const token = jwt.sign({ username: existingUser }, JWT_SECRET, { expiresIn: "7d" });
+
+          return res.send({ status: 'login', message: 'Login accepted', token, usermail });
+
+        } else {
+          return res.json({ status: 'error', message: 'Wrong credentials' });
+        }
+      } else {
+        const encryptedPassword = await bcrypt.hash(password, saltRounds);
+        const newUser = new model({ usermail, password: encryptedPassword, telegramToken: telegramToken });
+        await newUser.save();
+        return res.json({ status: 'ok', message: 'New user created' });
+      }
+    }
+  } catch (err) {
+    console.error("Error:", err);
+    return res.status(500).json({ status: 'error', message: 'Something went wrong' });
+  }
 });
 
 
 
 const otpSchema = new mongoose.Schema({
-    email: String,
-    otp: String,
-    createdAt: { type: Date, default: Date.now, expires: 300 } // expires after 5 minutes
+  email: String,
+  otp: String,
+  createdAt: { type: Date, default: Date.now, expires: 300 } // expires after 5 minutes
 });
 
 const otpmodel = mongoose.model('otp', otpSchema, 'otp');
 
 app.post('/otp', async (req, res) => {
-    const { usermail, otp } = req.body;
-    const otpauth = await otpmodel({ email: usermail, otp: otp });
-    otpauth.save();
-    console.log("Email saved");
+  const { usermail, otp } = req.body;
+  const otpauth = await otpmodel({ email: usermail, otp: otp });
+  otpauth.save();
+  console.log("Email saved");
 
 
 
 
-    const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-        },
-    });
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
 
-    const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: usermail,
-        subject: 'Your OTP from JARVIS',
-        text: `Your OTP is: ${otp}`,
-    };
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: usermail,
+    subject: 'Your OTP from JARVIS',
+    text: `Your OTP is: ${otp}`,
+  };
 
-    try {
-        const info = await transporter.sendMail(mailOptions);
-        console.log('Email sent:', info.response);
-        res.status(200).json({ message: 'OTP sent successfully' });
-    } catch (error) {
-        console.error('Error sending email:', error);
-        res.status(500).json({ message: 'Failed to send OTP' });
-    }
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Email sent:', info.response);
+    res.status(200).json({ message: 'OTP sent successfully' });
+  } catch (error) {
+    console.error('Error sending email:', error);
+    res.status(500).json({ message: 'Failed to send OTP' });
+  }
 });
 
 const reminderSchema = new mongoose.Schema({
@@ -356,7 +377,7 @@ const sendTelegramMessage = async (text, username) => {
   try {
 
     console.log("Telegram function works");
-    const telegram_token = await model.findOne({usermail: username});
+    const telegram_token = await model.findOne({ usermail: username });
     const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
     await axios.post(url, {
       chat_id: telegram_token.telegramToken,
@@ -386,11 +407,11 @@ cron.schedule("* * * * *", async () => {
     for (const rem of dueReminders) {
       const message = `${rem.task}`;
 
-        await sendTelegramMessage(message, rem.username);
-        Reminder.findByIdAndDelete(rem._id)
-          .then(() => console.log("🗑 Reminder deleted"))
-          .catch((err) => console.error("❌ Error deleting reminder:", err));
-      
+      await sendTelegramMessage(message, rem.username);
+      Reminder.findByIdAndDelete(rem._id)
+        .then(() => console.log("🗑 Reminder deleted"))
+        .catch((err) => console.error("❌ Error deleting reminder:", err));
+
     }
 
   } catch (error) {
@@ -437,15 +458,15 @@ cron.schedule('0 9 * * *', async () => {
 });
 
 
-app.get('/teleid', async(req,res) => {
-    TELEGRAM_CHAT_ID = req.data.teleid;
+app.get('/teleid', async (req, res) => {
+  TELEGRAM_CHAT_ID = req.data.teleid;
 })
 
 
 
 app.get('/username', async (req, res) => {
-    res.send(name);
-    console.log(name);
+  res.send(name);
+  console.log(name);
 
 })
 
