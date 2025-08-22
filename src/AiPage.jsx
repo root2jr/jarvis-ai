@@ -19,7 +19,7 @@ const AiPage = () => {
 
 
 
-
+  const [lazyLoader, setLazyLoader] = useState(false);
   const [ison, setIson] = useState(false);
   const jwt = localStorage.getItem('token');
   const decodedJwt = jwtDecode(jwt);
@@ -79,6 +79,8 @@ const AiPage = () => {
   useEffect(() => {
     const fetchMessages = async () => {
       try {
+        setMessages([]);
+        setLazyLoader(true);
         const res = await axios.get(`https://jarvis-ai-8pr6.onrender.com/conversations/${usersname}`, {
           headers: {
             Authorization: `Bearer ${jwt}`
@@ -86,14 +88,16 @@ const AiPage = () => {
         });
         if (res) {
           if (Array.isArray(res.data.messages)) {
-
+            setLazyLoader(false);
             setMessages(res.data.messages);
           } else {
             console.error("messages is not an array:", res.data.messages);
+            setLazyLoader(false);
             setMessages([]);
           }
         }
       } catch (err) {
+        setLazyLoader(false);
         console.error('Failed to fetch saved messages:', err);
       }
     };
@@ -126,13 +130,13 @@ const AiPage = () => {
     const timestamp = new Date().toISOString();
     const requests = [];
 
-
     requests.push(
       axios.post('https://jarvis-ai-8pr6.onrender.com/conversations', {
         sender: message.sender,
         message: message.message,
         timestamp,
         username: usersname,
+        time: message.time,
         conversationId,
       }, {
         headers: {
@@ -149,33 +153,7 @@ const AiPage = () => {
   };
 
 
-  const reminderKeywords = [
-    "remind me to",
-    "remind me at",
-    "set a reminder",
-    "alert me to",
-    "wake me at",
-    "alarm for",
-    "reminder:",
-    "remind",
-    "alert",
-  ];
-  const saveKeywords = [
-    "Task:",
-    "add task",
-    "note down",
-    "remember to",
-    "schedule",
-    "set a task",
-    "log this",
-    "i need to",
-    "save task",
-    "track this",
-    "task to do",
-    "put this on my list",
-    "i have to",
-    "assign task"
-  ];
+
 
   const viewKeywords = [
     "what are my tasks",
@@ -266,6 +244,12 @@ const AiPage = () => {
   const getResponse = async () => {
     const inputField = document.getElementById('input');
     const message = inputField.value.trim();
+    const date = new Date;
+    const time = date.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true
+    });
     if (!message) return;
     const isViewTaskMessage = (message) => {
       return viewKeywords.some(keyword =>
@@ -281,22 +265,19 @@ const AiPage = () => {
     if (message == "clear tasks") {
       setTaskbarName([{ type: 'task', text: '' }]);
     }
-    const userMessage = { sender: 'user', message: message };
+    setLoaderRef(true);
+    const userMessage = { sender: 'user', message: message, time: time };
     setMessages((prev) => [...prev, userMessage]);
     saveData(userMessage, userid);
-    const isReminderMessage = (message) => {
-      return reminderKeywords.some(keyword =>
-        message.toLowerCase().includes(keyword)
-      );
-    };
-    const isTaskMessage = (message) => {
-      return saveKeywords.some(keyword =>
-        message.toLowerCase().includes(keyword)
-      );
-    };
 
-
-    if (isTaskMessage(message)) {
+    const check_intent = async (message) => {
+      const response = await axios.post("http://localhost:5000/predict", {
+        text: message
+      })
+      return response.data.intent;
+    }
+    const intent = await check_intent(message);
+    if (intent == "task") {
 
       const parsedmessa = parseTasks(message);
       const aiBotReply = await axios.post('https://jarvis-ai-8pr6.onrender.com/api/gemini', {
@@ -306,24 +287,24 @@ const AiPage = () => {
           Authorization: `Bearer ${jwt}`
         }
       });
-        const remmess = aiBotReply.data.response.replace(/JARVIS:/g, '').replace(/<\/?p[^>]*>/gi, ''); 
-        const saveTaskdeadline = await axios.post("https://jarvis-ai-8pr6.onrender.com/tasks", {
-          username: usersname,
-          intent: parsedmessa.intent,
-          datetime: parsedmessa.datetime,
-          task: remmess
-        }, {
-          headers: {
-            Authorization: `Bearer ${jwt}`
-          },
-        })
+      const remmess = aiBotReply.data.response.replace(/JARVIS:/g, '').replace(/<\/?p[^>]*>/gi, '');
+      const saveTaskdeadline = await axios.post("https://jarvis-ai-8pr6.onrender.com/tasks", {
+        username: usersname,
+        intent: parsedmessa.intent,
+        datetime: parsedmessa.datetime,
+        task: remmess
+      }, {
+        headers: {
+          Authorization: `Bearer ${jwt}`
+        },
+      })
       setTaskName(parsedmessa.task);
       setTaskbarName((prev) => [...prev, { type: 'task', message: parsedmessa.task }]);
       inputField.value = ""
     }
 
 
-    else if (isReminderMessage(message)) {
+    else if (intent == "reminder") {
       console.log("Reminder Detected");
       const parsedmess = parseReminder(message);
       const aiBotReply = await axios.post('https://jarvis-ai-8pr6.onrender.com/api/gemini', {
@@ -350,7 +331,6 @@ const AiPage = () => {
     }
 
     try {
-      setLoaderRef(true);
       const res = await axios.post('https://jarvis-ai-8pr6.onrender.com/api/gemini', {
         prompt: message,
         conversationId: userid,
@@ -360,12 +340,12 @@ const AiPage = () => {
           Authorization: `Bearer ${jwt}`
         }
       });
-      let botMessageText = res.data.response.startsWith('JARVIS:')
+      let cleanbotMessageText = res.data.response.startsWith('JARVIS:')
         ? res.data.response.replace('JARVIS:', '')
         : res.data.response;
-      botMessageText = formatGeminiResponse(botMessageText);
-      const botMessage = { sender: 'bot', message: botMessageText };
-      const savebotMessage = { sender: 'bot', message: res.data.response };
+      let botMessageText = formatGeminiResponse(cleanbotMessageText);
+      const botMessage = { sender: 'bot', message: botMessageText, time: time };
+      const savebotMessage = { sender: 'bot', message: cleanbotMessageText , time: time };
       setMessages((prev) => [...prev, botMessage]);
       if (ison) {
         const speakableres = res.data.response.replace(/<\/?p[^>]*>/gi, '');;
@@ -419,10 +399,7 @@ const AiPage = () => {
         Authorization: `Bearer ${jwt}`
       }
     });
-    setMessages([
-      { sender: 'user', message: "Wake Up J.A.R.V.I.S, Daddy's Home" },
-      { sender: 'bot', message: "Welcome Home Sir, What are we going to work on today?" },
-    ]);
+    setMessages([]);
   };
 
   useEffect(() => {
@@ -471,16 +448,14 @@ const AiPage = () => {
 
         <div className='ham-burger' ref={navRef}>
           <p className='pow'>Powered by Gemini AI</p>
+          <h1 onClick={toggleNav}><i class="fa-solid fa-xmark"></i></h1>
           <ul>
             <li><div className='voice-mode-toggle' onClick={() => { ison ? setIson(false) : setIson(true), document.querySelector('.voice-mode-toggle').classList.toggle('activate') }}>Voice-Mode</div></li>
             <li>
               <button onClick={() => { resetChat(); toggleNav(); }}>DELETE CHAT</button>
             </li>
             <li>
-              <a onClick={toggleNav}>AI</a>
-            </li>
-            <li>
-              <a href='https://portfolio-jram-18.netlify.app/#about'>CREATOR</a>
+              <a href='https://jram-18.netlify.app/#about'>CREATOR</a>
             </li>
             <li onClick={() => { document.getElementById("Confirm").classList.toggle("act") }}><div className="Logout" id='Logout' >Log Out</div></li>
             <li><div className="Confirm" id='Confirm'>
@@ -499,6 +474,7 @@ const AiPage = () => {
             {messages.map((msg, index) => (
               <li key={index} className={msg.sender}>
                 <span dangerouslySetInnerHTML={{ __html: msg.message }} />
+                <p id='time'>{msg.time ? msg.time : null}</p>
               </li>
             ))}
 
@@ -527,6 +503,14 @@ const AiPage = () => {
           />
           <p className='info '>i<p className='warning'> Uses Google Gemini. AI responses may be inaccurate or inappropriate. Inputs are stored for history purposes temporarily. Don’t enter personal info.</p></p>
         </div>
+        {lazyLoader && <div className="lazy-loader">
+          <ul>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+          </ul>
+        </div>}
       </div>
     </div >
   );

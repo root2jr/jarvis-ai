@@ -15,7 +15,7 @@ nav {
     height: 40px;
     align-items: center;
     justify-content: center;
-    background-color: rgba(0, 0, 0, 0.637);
+    background-color: rgba(0, 0, 0, 0.733);
 }
 
 .aipage video {
@@ -116,9 +116,13 @@ nav {
     margin-top: 30px;
     border: 1px solid skyblue;
     padding: 20px;
+    padding-bottom: 0px;
     color: white;
     white-space: pre-wrap;
+    background-color: rgba(0, 0, 0, 0.466);
+    line-height: 30px;
     word-wrap: break-word;
+    border-radius: 20px;
 }
 
 .chat::-webkit-scrollbar {
@@ -155,9 +159,10 @@ nav img {
 }
 
 nav h1 {
-    margin-left: 15px;
+    margin: 0px;
+    padding: 0px;
     text-align: center;
-    margin-bottom: 15px;
+    padding-left: 15px;
 }
 
 .chat ul {
@@ -168,6 +173,7 @@ nav h1 {
 .chat ul li:nth-child(odd) {
     border: 1px solid green;
     align-self: flex-end;
+    border-radius: 20px;
 }
 
 .loader {
@@ -294,6 +300,13 @@ nav h1 {
     transition: .5s ease;
 }
 
+.ham-burger h1 {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    cursor: pointer;
+}
+
 .ham-burger ul {
     width: 100%;
     height: 100%;
@@ -408,6 +421,8 @@ nav h1 {
 .Confirm h1 {
     font-size: 30px;
     color: black;
+    padding: 0px;
+    margin: 0px;
 }
 
 .Confirm p {
@@ -417,7 +432,8 @@ nav h1 {
     align-self: center;
     padding-top: 20px;
 }
-.nav-button{
+
+.nav-button {
     cursor: pointer;
 }
 
@@ -441,7 +457,8 @@ nav h1 {
     cursor: pointer;
 
 }
-.info{
+
+.info {
     margin-left: 20px;
 }
 
@@ -479,54 +496,136 @@ nav h1 {
     }
 }
 
-.warning{
+.warning {
     font-size: 10px;
-    color:black;
+    color: black;
     background-color: white;
-    padding:10px;
+    padding: 10px;
     position: absolute;
     margin-top: -100px;
     visibility: hidden;
 }
-.info:hover .warning{
+
+.info:hover .warning {
     visibility: visible;
 }
+
 @media screen and (min-width:950px) {
-    #info{
+    #info {
         opacity: 0;
     }
 }
+
 @media screen and (max-width:950px) {
-    #info{
+    #info {
         font-size: 20px;
         position: absolute;
         justify-self: flex-end;
-        border:1px solid skyblue;
+        border: 1px solid skyblue;
         text-align: center;
-        padding:0px 10px;
+        padding: 0px 10px;
         border-radius: 50%;
-        right:20;
+        right: 20;
         margin-top: 20px;
         margin-left: 80%;
         transition: .5s ease;
-        cursor:pointer
+        cursor: pointer
     }
-    #info:hover .warning{
+
+    #info:hover .warning {
         visibility: visible;
     }
-    #info:hover{
-        background-color: skyblue;
-        color:black;
-        transition: .5s ease;
-        cursor:pointer
 
+    #info:hover {
+        background-color: skyblue;
+        color: black;
+        transition: .5s ease;
+        cursor: pointer
     }
-    .info{
+
+    .info {
         opacity: 0;
     }
-    .warning{
-        margin:0px;
+
+    .warning {
+        margin: 0px;
         margin-left: -50px;
-        margin-top:5px;
+        margin-top: 5px;
     }
+}
+
+
+.lazy-loader {
+    width: 100%;
+    height: 100vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    padding-top: 100;
+    padding-bottom: 100;
+}
+
+.lazy-loader ul {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    list-style: none;
+    gap: 30px;
+    padding-top: 100px;
+    padding-bottom: 100px;
+    padding-left: 30px;
+    padding-right: 30px;
+}
+
+.lazy-loader ul li:nth-child(even) {
+    width: 30%;
+    height: 50px;
+    position: relative;
+    background: skyblue;
+    border-radius: 20px;
+    border: none;
+    overflow: hidden;
+}
+
+.lazy-loader ul li:nth-child(odd) {
+    width: 30%;
+    height: 50px;
+    background: skyblue;
+    border-radius: 20px;
+    position: relative;
+    align-self: flex-end;
+    margin-right: 50px;
+    border: none;
+    overflow: hidden;
+}
+
+.lazy-loader ul li::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -150px;
+    height: 100%;
+    width: 150px;
+    background: linear-gradient(90deg,
+            transparent,
+            rgba(255, 255, 255, 0.8),
+            transparent);
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    100% {
+        left: 100%;
+    }
+}
+.strong{
+    color:skyblue;
+}
+#time{
+    color:lightgray;
+    font-size: 10px;
+    align-self: flex-end;
+    justify-self: flex-end;
 }

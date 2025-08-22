@@ -123,8 +123,15 @@ input:-webkit-autofill:active {
     display: flex;
     align-items: center;
     align-content: center;
+    flex-direction: column;
     transition: .5s ease;
+    border-radius: 20px;
     transform: translateY(-1050%);
+}
+.login-msg p{
+    color:gray;
+    font-size: 15px;
+    padding-bottom: 30px;
 }
 
 .login-msg h1 {
@@ -139,6 +146,9 @@ input:-webkit-autofill:active {
 }
 .success{
     transform: translateY(-350%);
+}
+.success-2{
+    transform: translateY(-200%);
 }
 .login-box a{
     color: white;

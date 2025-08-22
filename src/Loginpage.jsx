@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import './login.css'
 import bgVideo from './bg.mp4'
 import axios from 'axios'
@@ -14,49 +14,60 @@ const Loginpage = () => {
         }, 2000)
     }
 
-    function forgot (){
+    function forgot() {
         navigate('/forgotpassword');
     }
-
+    const [displayp, setDisplayp] = useState(false);
+    const [hideTelegram, setHideTelegram] = useState(true);
 
 
     const sendData = async (e) => {
         e.preventDefault();
         const msg = document.getElementById('msg');
         const fail = document.getElementById('fail');
+        const usermess = document.getElementById('text');
         let usermail = document.getElementById('username').value;
         let password = document.getElementById('password').value;
+        let telegramID = document.getElementById("telegram").value;
         let span = document.getElementById('span');
         let u = document.getElementById('username');
         let p = document.getElementById('password');
         console.log('working');
-        if(username == "" || password == ""){
+        if (username == "" || password == "") {
             fail.innerText = "Enter valid Credentials";
             msg.classList.toggle('success');
-           return ;
+            return;
         }
 
         const response = await axios.post('https://jarvis-ai-8pr6.onrender.com/login', {
             usermail: usermail,
-            password: password
+            password: password,
+            telegramToken: telegramID
         });
         const data = response.data;
         u.value = '';
         p.value = '';
 
         if (data.status === 'ok') {
+            setHideTelegram(false);
             fail.innerText = "NEW USER CREATED!"
-            msg.classList.toggle('success');
+            msg.classList.toggle("success-2");
+            usermess.innerText = "Now you may Login to your account with your Credentials";
+            setTimeout(() => {
+                msg.classList.toggle("success-2");
+            }, 5000);
             localStorage.setItem('token', response.data.token);
-            localStorage.setItem('usersmail',usermail);
-            successPage();
+            localStorage.setItem('usersmail', usermail);
 
         }
         else if (data.status === 'login') {
-            msg.classList.toggle('success');
+            fail.innerText = "Login Successful";
+            msg.classList.toggle("success");
+            setTimeout(() => {
+                msg.classList.toggle("success");
+            }, 2000);
             localStorage.setItem('token', response.data.token);
-            localStorage.setItem('usersmail',response.data.usermail);
-
+            localStorage.setItem('usersmail', usermail);
             successPage();
 
         }
@@ -64,12 +75,17 @@ const Loginpage = () => {
             fail.innerText = "LOGIN FAILED!"
             span.innerText = <i class="fa-solid fa-xmark"></i>;
             msg.classList.toggle("success");
+            setTimeout(() => {
+                msg.classList.toggle("success");
+            }, 2000);
 
         }
         else {
             fail.innerText = "LOGIN FAILED!"
             msg.classList.toggle("success");
-
+            setTimeout(() => {
+                msg.classList.toggle("success");
+            }, 2000);
         }
     }
 
@@ -86,6 +102,7 @@ const Loginpage = () => {
             <div className="bg-layer">
                 <div id='msg' className="login-msg">
                     <h1 id='fail'>LOGIN SUCCESFUL! <span id='span'> <i class="fa-solid fa-check"></i></span></h1>
+                    <p id='text'></p>
                 </div>
                 <div className="login-box">
                     <h1>Login</h1>
@@ -97,7 +114,7 @@ const Loginpage = () => {
                         autoComplete="new-username"
                         id='username'
                     />
-                    
+
                     <input
                         type="password"
                         name="password"
@@ -105,13 +122,19 @@ const Loginpage = () => {
                         autoComplete="new-password"
                         id='password'
                     />
+                   { hideTelegram && <input
+                        type="text"
+                        name="telegramid"
+                        placeholder="Telegram ID ( Optional if you already have an account )"
+                        id='telegram'
+                    /> }
                     <a href='' onClick={forgot}>Forgot Password?</a>
                     <button className="btn" onClick={sendData}>Login</button>
                 </div>
             </div>
-            
+
         </div>
-      
+
     )
 }
 
