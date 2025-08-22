@@ -373,6 +373,13 @@ app.post("/tasks", async (req, res) => {
   }
 });
 
+
+app.post("/fetchtasks", async(req,res) => {
+    const user = req.body.user;
+    const tasks = await TaskModel.find({username: user});
+    res.send({tasks:tasks})
+})
+
 const sendTelegramMessage = async (text, username) => {
   try {
 
