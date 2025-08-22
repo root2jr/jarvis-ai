@@ -18,11 +18,11 @@ const Tasks = ({tasks}) => {
         <p onClick={taskclose}><i class="fa-solid fa-xmark"></i></p>
       </div>
       <ul>
-        {tasks.map((task, index) => (
+        {tasks? tasks.map((task, index) => (
           <li key={index}>
-            <div>{(task.message).replace("add task","")}</div>
+            <div>{(task.task).replace("Sir, a reminder:","")}</div>
           </li>
-        ))}
+        )):null}
 
       </ul>
     </div>

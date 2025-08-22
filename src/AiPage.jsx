@@ -32,19 +32,11 @@ const AiPage = () => {
   }, [])
 
   const [name, setName] = useState('');
-  const [taskbarName, setTaskbarName] = useState(() => {
-    const stored = localStorage.getItem("tasks");
-    return stored ? JSON.parse(stored) : [];
-  });
+  const [taskbarName, setTaskbarName] = useState();
 
 
 
-  useEffect(() => {
-    let storedTasks = localStorage.getItem("tasks");
-    if (storedTasks) {
-      setTaskbarName(JSON.parse(storedTasks));
-    }
-  }, [])
+
 
   useEffect(() => {
     const userfunc = async () => {
@@ -60,9 +52,7 @@ const AiPage = () => {
   }, [])
 
 
-  useEffect(() => {
-    localStorage.setItem("tasks", JSON.stringify(taskbarName));
-  }, [taskbarName]);
+  
 
 
 
@@ -102,6 +92,23 @@ const AiPage = () => {
       }
     };
     fetchMessages();
+    
+    const fetch_tasks = async () => {
+      try{
+        const response = await axios.post("http://localhost:5000/fetchtasks",{
+          user: usersname
+        });
+        console.log(response.data.tasks);
+        setTaskbarName(response.data.tasks);
+
+      }
+      catch(err) {
+        console.error("Error Fetching Tasks:",err);
+      }
+    }
+    
+    fetch_tasks();
+
   }, []);
 
   const [loaderRef, setLoaderRef] = useState(false);
