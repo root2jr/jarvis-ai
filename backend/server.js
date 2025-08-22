@@ -8,6 +8,7 @@ import bcrypt from 'bcrypt'
 import nodemailer from 'nodemailer'
 import cron from 'node-cron';
 import { spawn } from 'child_process'
+import * as chrono from "chrono-node";
 
 dotenv.config();
 const app = express();
@@ -374,11 +375,30 @@ app.post("/tasks", async (req, res) => {
 });
 
 
-app.post("/fetchtasks", async(req,res) => {
-    const user = req.body.user;
-    const tasks = await TaskModel.find({username: user});
-    res.send({tasks:tasks})
+app.post("/fetchtasks", async (req, res) => {
+  const user = req.body.user;
+  const tasks = await TaskModel.find({ username: user });
+  res.send({ tasks: tasks })
 })
+
+app.post("/parsetext", async (req, res) => {
+  const text = req.body.text;
+  const parseddate = chrono.parseDate(text);
+  if (!parseddate) {
+    return res.json({ "message": "Could Extract Time" });
+  }
+  const results = chrono.parse(text);
+  let task = text;
+  if (results.length > 0) {
+    results.forEach(r => {
+      task = task.replace(r.text, "").trim();
+    });
+  }
+
+  return res.json({date: parseddate, task: task || text})
+
+})
+
 
 const sendTelegramMessage = async (text, username) => {
   try {
