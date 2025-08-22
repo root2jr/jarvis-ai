@@ -271,7 +271,7 @@ const AiPage = () => {
     saveData(userMessage, userid);
 
     const check_intent = async (message) => {
-      const response = await axios.post("http://localhost:5000/predict", {
+      const response = await axios.post("https://jarvis-ai-8pr6.onrender.com/predict", {
         text: message
       })
       return response.data.intent;
