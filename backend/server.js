@@ -121,9 +121,6 @@ app.post('/api/gemini', async (req, res) => {
         .join('\n');
     }
 
-    const AIname = "your name is JARVIS! only tell when asked by the user";
-    const creator = "You are JARVIS and powered by gemini. Always say this when you are asked for your creator";
-    const finalPrompt = `You are a Personal Assistant like Jarvis from ironman but be a little nice, avoid using emojis, Always refer to the user as sir.\n${creator}\n${AIname}\njust remember it and don’t send it to the user unless he asks for it\n${memoryText}\nUser: ${prompt}\n`;
     const Superprompt = `
 You are Jarvis, a friendly AI personal assistant powered by Gemini. 
 Your role is to help the user with setting reminders, maintaining tasks, and being conversational.
@@ -178,7 +175,7 @@ ${memoryText}
     const response = await axios.post(url, {
       contents: [
         {
-          parts: [{ text: finalPrompt }]
+          parts: [{ text: Superprompt }]
         }
       ]
     });
@@ -272,7 +269,6 @@ app.post('/login', async (req, res) => {
         const compare = await bcrypt.compare(password, existingUser.password);
         if (compare) {
           const token = jwt.sign({ username: existingUser }, JWT_SECRET, { expiresIn: "7d" });
-
           return res.send({ status: 'login', message: 'Login accepted', token, usermail });
 
         } else {
