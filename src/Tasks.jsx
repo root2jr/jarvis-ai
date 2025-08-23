@@ -20,7 +20,7 @@ const Tasks = ({tasks}) => {
       <ul>
         {tasks? tasks.map((task, index) => (
           <li key={index}>
-            <div>{(task.task).replace("Sir, a reminder:","")}</div>
+            <div>{(task.task)}</div>
           </li>
         )):null}
 
