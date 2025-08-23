@@ -95,7 +95,7 @@ const AiPage = () => {
     
     const fetch_tasks = async () => {
       try{
-        const response = await axios.post("http://localhost:5000/fetchtasks",{
+        const response = await axios.post("http://jarvis-ai-8pr6.onrender.com/fetchtasks",{
           user: usersname
         });
         console.log(response.data.tasks);
@@ -222,7 +222,7 @@ const AiPage = () => {
     }
 
     task = text.replace(/remind me to|set me a reminder to|alert me about|remind me that/, "").trim();
-
+    console.log(datetime);
     return { intent, task, datetime };
   }
   function parseTasks(text) {
