@@ -32,7 +32,7 @@ const AiPage = () => {
   }, [])
 
   const [name, setName] = useState('');
-  const [taskbarName, setTaskbarName] = useState();
+  const [taskbarName, setTaskbarName] = useState([]);
 
 
 
@@ -95,7 +95,7 @@ const AiPage = () => {
     
     const fetch_tasks = async () => {
       try{
-        const response = await axios.post("http://jarvis-ai-8pr6.onrender.com/fetchtasks",{
+        const response = await axios.post("https://jarvis-ai-8pr6.onrender.com/fetchtasks",{
           user: usersname
         });
         console.log(response.data.tasks);
@@ -287,8 +287,9 @@ const AiPage = () => {
     if (intent == "task") {
 
       const parsedmessa = parseTasks(message);
-      const aiBotReply = await axios.post('https://jarvis-ai-8pr6.onrender.com/api/gemini', {
-        prompt: `you are sending the user a reminding message as JARVIS for this'${parsedmessa.task}',make it in a single line`
+      const aiBotReply = await axios.post('https://jarvis-ai-8pr6.onrender.com/notifications', {
+        text: `you are sending the user a reminding message as JARVIS for this'${parsedmessa.task}',make it in a single line`,
+        context:"task"
       }, {
         headers: {
           Authorization: `Bearer ${jwt}`
@@ -306,7 +307,7 @@ const AiPage = () => {
         },
       })
       setTaskName(parsedmessa.task);
-      setTaskbarName((prev) => [...prev, { type: 'task', message: parsedmessa.task }]);
+      setTaskbarName(prev => [...prev, { type: 'task', message: parsedmessa.task }]);
       inputField.value = ""
     }
 
@@ -314,8 +315,9 @@ const AiPage = () => {
     else if (intent == "reminder") {
       console.log("Reminder Detected");
       const parsedmess = parseReminder(message);
-      const aiBotReply = await axios.post('https://jarvis-ai-8pr6.onrender.com/api/gemini', {
-        prompt: `you are sending the user a reminding message as JARVIS for this'${parsedmess.task}',make it in a single line`
+      const aiBotReply = await axios.post('https://jarvis-ai-8pr6.onrender.com/notifications', {
+        prompt: `you are sending the user a reminding message as JARVIS for this'${parsedmess.task}',make it in a single line`,
+        context: "reminder"
       }, {
         headers: {
           Authorization: `Bearer ${jwt}`

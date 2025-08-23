@@ -190,6 +190,71 @@ ${memoryText}
   }
 });
 
+app.post("/notifications", async (req, res) => {
+  try {
+    const text = req.data.text;
+    const context = req.data.context;
+    const prompt = `
+You are Jarvis, an AI assistant responsible for generating clean and friendly notification texts.
+
+--- General Rules ---
+- Notifications must be **short, clear, and natural**.
+- Always be polite and motivational, but not too formal.
+- Keep the tone like a helpful assistant reminding the user, not robotic.
+
+--- Reminders ---
+- A reminder notification must include the task and the time context if relevant.
+- Do not add unnecessary fluff.
+- Format: "🔔 Reminder: [task] at [time/day]" or "🔔 Reminder: [task] now".
+- Keep it under 12 words if possible.
+
+Examples:
+- "🔔 Hey there, Submit your project by 6:00 PM."
+- "🔔 Jarvis here, Take your medicine now."
+- "🔔 You asked me to remind you to Call mom tomorrow evening."
+
+--- Daily Tasks ---
+- Daily task notifications are triggered at 9:00 AM every day.
+- These should encourage the user to check tasks or start their day productively.
+- Use a friendly, motivating tone.
+
+Examples:
+- "🌞 Good morning! Here's your daily task list."
+- "📋 Don’t forget your pending tasks today."
+- "🚀 Time to check your to-do list and get started!"
+- "✅ Stay on track! Review your tasks for today."
+
+--- Behavior ---
+- If generating for a reminder, use the reminder style.
+- If generating for daily tasks, use the daily task style.
+- Do not include explanations, just the raw notification text.
+--Generate Notification for the prompt--
+user-prompt: ${text} 
+context: ${context}
+`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+    const response = await axios.post(url, {
+      contents: [
+        {
+          parts: [{ text: prompt }]
+        }
+      ]
+    });
+
+    const aiResponse = response.data.candidates?.[0]?.content?.parts?.[0]?.text || "Failed to respond.";
+    res.json({ response: aiResponse });
+  }
+
+
+  catch (error) {
+
+  }
+})
+
+
+
+
+
 
 app.get('/conversations/:username', async (req, res) => {
   const { username } = req.params;
@@ -422,9 +487,15 @@ app.post("/tasks", async (req, res) => {
 
 
 app.post("/fetchtasks", async (req, res) => {
-  const user = req.body.user;
-  const tasks = await TaskModel.find({ username: user });
-  res.send({ tasks: tasks })
+  try {
+    const user = req.body.user;
+    const tasks = await TaskModel.find({ username: user });
+    res.send({ tasks: tasks })
+  }
+  catch (error) {
+    console.error("Error:", error);
+  }
+
 })
 
 app.post("/parsetext", async (req, res) => {
