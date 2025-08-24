@@ -485,6 +485,16 @@ app.post("/tasks", async (req, res) => {
   }
 });
 
+app.post("/removetasks", async(req,res) => {
+  try{
+   const response = await TaskModel.findOneAndDelete({task: req.body.task});
+   res.send("Task Deleted");
+  }
+  catch(error){
+    console.error("Error:",error);
+  }
+})
+
 
 app.post("/fetchtasks", async (req, res) => {
   try {
