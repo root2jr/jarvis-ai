@@ -126,7 +126,7 @@ input:-webkit-autofill:active {
     flex-direction: column;
     transition: .5s ease;
     border-radius: 20px;
-    transform: translateY(-1050%);
+    transform: translateY(-1300%);
 }
 .login-msg p{
     color:gray;
@@ -158,4 +158,22 @@ input:-webkit-autofill:active {
 }
 .login-box a:hover{
     text-decoration:underline;
+}
+
+.info-container{
+    width:100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap:30px;
+    position: relative;
+    padding-left: 70px;
+}
+#information{
+    width: fit-content;
+    height: fit-content;
+    border:1px solid lightblue;
+    padding:5px 15px;
+    font-size: 20px;
+    color:light;
 }

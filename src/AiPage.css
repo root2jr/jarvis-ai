@@ -419,11 +419,13 @@ nav h1 {
 }
 
 .Confirm h1 {
-    font-size: 30px;
+    font-size: 20px;
     color: black;
     padding: 0px;
     margin: 0px;
+    text-align: center;
 }
+
 
 .Confirm p {
     color: black;
