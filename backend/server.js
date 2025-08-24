@@ -192,8 +192,8 @@ ${memoryText}
 
 app.post("/notifications", async (req, res) => {
   try {
-    const text = req.data.text;
-    const context = req.data.context;
+    const text = req.body.text;
+    const context = req.body.context;
     const prompt = `
 You are Jarvis, an AI assistant responsible for generating clean and friendly notification texts.
 
@@ -205,7 +205,6 @@ You are Jarvis, an AI assistant responsible for generating clean and friendly no
 --- Reminders ---
 - A reminder notification must include the task and the time context if relevant.
 - Do not add unnecessary fluff.
-- Format: "🔔 Reminder: [task] at [time/day]" or "🔔 Reminder: [task] now".
 - Keep it under 12 words if possible.
 
 Examples:
@@ -245,9 +244,8 @@ context: ${context}
     res.json({ response: aiResponse });
   }
 
-
   catch (error) {
-
+       console.error("Error:",error);
   }
 })
 
