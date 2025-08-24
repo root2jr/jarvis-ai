@@ -9,7 +9,6 @@ import nodemailer from 'nodemailer'
 import cron from 'node-cron';
 import { spawn } from 'child_process'
 import * as chrono from "chrono-node";
-import nlp from 'compromise'
 
 dotenv.config();
 const app = express();
@@ -512,26 +511,10 @@ app.post("/fetchtasks", async (req, res) => {
 
 
 
-  const extractTask = (input) => {
-    const doc = nlp(input)
-    const filler = new Set(["dude", "bro", "hey", "man", "yo", "list", "task"])
 
-    let nouns = doc.nouns().out('array')
-
-    nouns = nouns.filter(n => !filler.has(n.toLowerCase()))
-
-    const verbs = doc.verbs().out('array')
-
-    if (verbs.some(v => ["add", "put", "schedule", "insert"].includes(v))) {
-      return nouns[0] || null
-    }
-
-    return nouns[0] || null
-  }
 
 app.post("/parsetext", async (req, res) => {
   const text = req.body.text;
-  const actualtask = extractTask(text);
   const parseddate = chrono.parseDate(text);
   if (!parseddate) {
     return res.json({ "message": "Could Extract Time" });
@@ -544,7 +527,7 @@ app.post("/parsetext", async (req, res) => {
     });
   }
 
-  return res.json({ date: parseddate, task: actualtask })
+  return res.json({ date: parseddate, task: task });
 
 })
 
