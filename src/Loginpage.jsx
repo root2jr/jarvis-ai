@@ -19,6 +19,7 @@ const Loginpage = () => {
     }
     const [displayp, setDisplayp] = useState(false);
     const [hideTelegram, setHideTelegram] = useState(true);
+    const [p, setP] = useState(false);
 
 
     const sendData = async (e) => {
@@ -42,7 +43,8 @@ const Loginpage = () => {
         const response = await axios.post('https://jarvis-ai-8pr6.onrender.com/login', {
             usermail: usermail,
             password: password,
-            telegramToken: telegramID
+            telegramToken: telegramID,
+            android: false
         });
         const data = response.data;
         u.value = '';
@@ -51,8 +53,8 @@ const Loginpage = () => {
         if (data.status === 'ok') {
             setHideTelegram(false);
             fail.innerText = "NEW USER CREATED!"
+            setP(true);
             msg.classList.toggle("success-2");
-            usermess.innerText = "Now you may Login to your account with your Credentials";
             setTimeout(() => {
                 msg.classList.toggle("success-2");
             }, 5000);
@@ -90,7 +92,9 @@ const Loginpage = () => {
     }
 
 
-
+    const handle_info = () => {
+        alert("Get your Telegram ID by messaging @userinfobot on Telegram. It will reply with your ID. \n Note: This is not your phone number or username.")
+    }
 
 
 
@@ -102,7 +106,7 @@ const Loginpage = () => {
             <div className="bg-layer">
                 <div id='msg' className="login-msg">
                     <h1 id='fail'>LOGIN SUCCESFUL! <span id='span'> <i class="fa-solid fa-check"></i></span></h1>
-                    <p id='text'></p>
+                    {p && <p id='text'>Now you may Login to your account with your Credentials</p>}
                 </div>
                 <div className="login-box">
                     <h1>Login</h1>
@@ -122,18 +126,23 @@ const Loginpage = () => {
                         autoComplete="new-password"
                         id='password'
                     />
-                   { hideTelegram && <input
+                    {hideTelegram && <div className="info-container">
+                     <input
                         type="text"
                         name="telegramid"
-                        placeholder="Telegram ID ( Optional if you already have an account )"
+                        placeholder="Telegram ID ( Optional if you already have a J.A.R.V.I.S account )"
                         id='telegram'
-                    /> }
-                    <a href='' onClick={forgot}>Forgot Password?</a>
-                    <button className="btn" onClick={sendData}>Login</button>
+                    />
+                    <button onClick={handle_info} id='information'>i</button>
                 </div>
-            </div>
+                }
 
+                <a href='' onClick={forgot}>Forgot Password?</a>
+                <button className="btn" onClick={sendData}>Login</button>
+            </div>
         </div>
+
+        </div >
 
     )
 }
