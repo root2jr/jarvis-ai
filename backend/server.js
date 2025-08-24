@@ -245,7 +245,7 @@ context: ${context}
   }
 
   catch (error) {
-       console.error("Error:",error);
+    console.error("Error:", error);
   }
 })
 
@@ -570,9 +570,7 @@ cron.schedule('0 9 * * *', async () => {
   tomorrow.setDate(today.getDate() + 1);
 
   try {
-    const upcomingTasks = await TaskModel.find({
-      datetime: { $gte: today, $lt: tomorrow },
-    });
+    const upcomingTasks = await TaskModel.find({});
 
     console.log('✅ Cron is checking for tasks');
 
@@ -582,11 +580,15 @@ cron.schedule('0 9 * * *', async () => {
     }
 
     for (const task of upcomingTasks) {
-      const dueDate = new Date(task.datetime).toLocaleString('en-IN', {
-        timeZone: 'Asia/Kolkata',
-      });
-
-      const message = `"${task.task}" Due Date:${dueDate}`;
+      let message;
+      if (task.datetime) {
+        const dueDate = new Date(task.datetime).toLocaleString('en-IN', {
+          timeZone: 'Asia/Kolkata',
+        });
+        message = `"${task.task}" Due Date:${dueDate}`;
+      } else {
+        message = `"${task.task}"`;
+      }
       try {
         await sendTelegramMessage(message);
         console.log("📨 Daily reminder sent for:", task.task);
