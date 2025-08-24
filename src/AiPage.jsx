@@ -323,7 +323,6 @@ const AiPage = () => {
           text: `you are sending the user a reminding message as JARVIS for this'${parsedmessa.task}',make it in a single line`,
           context: "task"
         });
-        console.log(aiBotReply);
         const remmess = aiBotReply.data.response.replace(/JARVIS:/g, '').replace(/<\/?p[^>]*>/gi, '');
         const saveTaskdeadline = await axios.post("https://jarvis-ai-8pr6.onrender.com/tasks", {
           username: usersname,
