@@ -49,10 +49,12 @@ const AiPage = () => {
       setName(username);
     }
     userfunc();
+
+   
   }, [])
 
 
-  
+
 
 
 
@@ -92,21 +94,21 @@ const AiPage = () => {
       }
     };
     fetchMessages();
-    
+
     const fetch_tasks = async () => {
-      try{
-        const response = await axios.post("https://jarvis-ai-8pr6.onrender.com/fetchtasks",{
+      try {
+        const response = await axios.post("https://jarvis-ai-8pr6.onrender.com/fetchtasks", {
           user: usersname
         });
         console.log(response.data.tasks);
         setTaskbarName(response.data.tasks);
 
       }
-      catch(err) {
-        console.error("Error Fetching Tasks:",err);
+      catch (err) {
+        console.error("Error Fetching Tasks:", err);
       }
     }
-    
+
     fetch_tasks();
 
   }, []);
@@ -276,69 +278,6 @@ const AiPage = () => {
     const userMessage = { sender: 'user', message: message, time: time };
     setMessages((prev) => [...prev, userMessage]);
     saveData(userMessage, userid);
-
-    const check_intent = async (message) => {
-      const response = await axios.post("https://jarvis-ai-8pr6.onrender.com/predict", {
-        text: message
-      })
-      return response.data.intent;
-    }
-    const intent = await check_intent(message);
-    if (intent == "task") {
-
-      const parsedmessa = parseTasks(message);
-      const aiBotReply = await axios.post('https://jarvis-ai-8pr6.onrender.com/notifications', {
-        text: `you are sending the user a reminding message as JARVIS for this'${parsedmessa.task}',make it in a single line`,
-        context:"task"
-      }, {
-        headers: {
-          Authorization: `Bearer ${jwt}`
-        }
-      });
-      const remmess = aiBotReply.data.response.replace(/JARVIS:/g, '').replace(/<\/?p[^>]*>/gi, '');
-      const saveTaskdeadline = await axios.post("https://jarvis-ai-8pr6.onrender.com/tasks", {
-        username: usersname,
-        intent: parsedmessa.intent,
-        datetime: parsedmessa.datetime,
-        task: remmess
-      }, {
-        headers: {
-          Authorization: `Bearer ${jwt}`
-        },
-      })
-      setTaskName(parsedmessa.task);
-      setTaskbarName(prev => [...prev, { type: 'task', message: parsedmessa.task }]);
-      inputField.value = ""
-    }
-
-
-    else if (intent == "reminder") {
-      console.log("Reminder Detected");
-      const parsedmess = parseReminder(message);
-      const aiBotReply = await axios.post('https://jarvis-ai-8pr6.onrender.com/notifications', {
-        prompt: `you are sending the user a reminding message as JARVIS for this'${parsedmess.task}',make it in a single line`,
-        context: "reminder"
-      }, {
-        headers: {
-          Authorization: `Bearer ${jwt}`
-        }
-
-      });
-      const remmess = aiBotReply.data.response.replace(/<\/?p[^>]*>/gi, '');
-
-      const sendReminder = await axios.post("https://jarvis-ai-8pr6.onrender.com/reminders", {
-        username: usersname,
-        intent: parsedmess.intent,
-        datetime: parsedmess.datetime,
-        task: remmess
-      }, {
-        headers: {
-          Authorization: `Bearer ${jwt}`
-        },
-      });
-      inputField.value = "";
-    }
-
     try {
       const res = await axios.post('https://jarvis-ai-8pr6.onrender.com/api/gemini', {
         prompt: message,
@@ -354,7 +293,7 @@ const AiPage = () => {
         : res.data.response;
       let botMessageText = formatGeminiResponse(cleanbotMessageText);
       const botMessage = { sender: 'bot', message: botMessageText, time: time };
-      const savebotMessage = { sender: 'bot', message: cleanbotMessageText , time: time };
+      const savebotMessage = { sender: 'bot', message: cleanbotMessageText, time: time };
       setMessages((prev) => [...prev, botMessage]);
       if (ison) {
         const speakableres = res.data.response.replace(/<\/?p[^>]*>/gi, '');;
@@ -367,8 +306,70 @@ const AiPage = () => {
       setLoaderRef(false);
       inputField.value = '';
     }
-  };
 
+
+    const check_intent = async (message) => {
+      const response = await axios.post("https://jarvis-ai-8pr6.onrender.com/predict", {
+        text: message
+      })
+      return response.data.intent;
+    }
+    const intent = await check_intent(message);
+    console.log(intent);
+    if (intent == "task") {
+      try {
+        const parsedmessa = parseTasks(message);
+        const aiBotReply = await axios.post('https://jarvis-ai-8pr6.onrender.com/notifications', {
+          text: `you are sending the user a reminding message as JARVIS for this'${parsedmessa.task}',make it in a single line`,
+          context: "task"
+        });
+        console.log(aiBotReply);
+        const remmess = aiBotReply.data.response.replace(/JARVIS:/g, '').replace(/<\/?p[^>]*>/gi, '');
+        const saveTaskdeadline = await axios.post("https://jarvis-ai-8pr6.onrender.com/tasks", {
+          username: usersname,
+          intent: parsedmessa.intent,
+          datetime: parsedmessa.datetime,
+          task: remmess
+        }, {
+          headers: {
+            Authorization: `Bearer ${jwt}`
+          },
+        })
+        setTaskName(parsedmessa.task);
+        setTaskbarName(prev => [...prev, { type: 'task', message: parsedmessa.task }]);
+      }
+      catch (error) {
+        console.error("Error:", error);
+      }
+    }
+
+
+    else if (intent == "reminder") {
+      console.log("Reminder Detected");
+      const parsedmess = parseReminder(message);
+      try {
+        const aiBotReply = await axios.post('https://jarvis-ai-8pr6.onrender.com/notifications', {
+          text: `you are sending the user a reminding message as JARVIS for this'${parsedmess.task}',make it in a single line`,
+          context: "reminder"
+        });
+        const remmess = aiBotReply.data.response.replace(/<\/?p[^>]*>/gi, '');
+
+        const sendReminder = await axios.post("https://jarvis-ai-8pr6.onrender.com/reminders", {
+          username: usersname,
+          intent: parsedmess.intent,
+          datetime: parsedmess.datetime,
+          task: remmess
+        }, {
+          headers: {
+            Authorization: `Bearer ${jwt}`
+          },
+        });
+        inputField.value = "";
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    };
+  };
 
   const startListening = () => {
     const recognition = new SpeechRecognition();
