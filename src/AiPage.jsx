@@ -37,7 +37,7 @@ const AiPage = () => {
   }, [])
 
   const [name, setName] = useState('');
-  const [taskbarName, setTaskbarName] = useState([]);
+  let [taskbarName, setTaskbarName] = useState([]);
 
 
 
@@ -55,30 +55,27 @@ const AiPage = () => {
     }
     userfunc();
 
-    const extractTask = (input) => {
-      const doc = nlp(input)
-      const filler = new Set(["dude", "bro", "hey", "man", "yo", "list", "task"])
 
-      let nouns = doc.nouns().out('array')
 
-      nouns = nouns.filter(n => !filler.has(n.toLowerCase()))
-
-      const verbs = doc.verbs().out('array')
-
-      if (verbs.some(v => ["add", "put", "schedule", "insert"].includes(v))) {
-        return nouns[0] || null
-      }
-
-      return nouns[0] || null
-    }
-    console.log(extractTask("Yo dude add the coding to my list"))   // coding
-    console.log(extractTask("Put gym workout in my list"))          // gym workout
-    console.log(extractTask("Schedule project meeting for tomorrow")) // project meeting
-    console.log(extractTask("Hey bro remind me about laundry"))
   }, [])
 
 
+  const extractTask = (input) => {
+    const doc = nlp(input)
+    const filler = new Set(["dude", "bro", "hey", "man", "yo", "list", "task"])
 
+    let nouns = doc.nouns().out('array')
+
+    nouns = nouns.filter(n => !filler.has(n.toLowerCase()))
+
+    const verbs = doc.verbs().out('array')
+
+    if (verbs.some(v => ["add", "put", "schedule", "insert"].includes(v))) {
+      return nouns[0] || null
+    }
+
+    return nouns[0] || null
+  }
 
 
 
