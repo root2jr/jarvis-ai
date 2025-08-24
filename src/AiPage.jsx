@@ -8,6 +8,7 @@ import * as chrono from "chrono-node";
 import postImg from './Capture.jpg'
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode'
+import nlp from 'compromise'
 
 const AiPage = () => {
   const navigate = useNavigate();
@@ -16,6 +17,10 @@ const AiPage = () => {
     localStorage.clear();
     navigate('/');
   }
+
+
+
+
 
 
 
@@ -50,7 +55,26 @@ const AiPage = () => {
     }
     userfunc();
 
-   
+    const extractTask = (input) => {
+      const doc = nlp(input)
+      const filler = new Set(["dude", "bro", "hey", "man", "yo", "list", "task"])
+
+      let nouns = doc.nouns().out('array')
+
+      nouns = nouns.filter(n => !filler.has(n.toLowerCase()))
+
+      const verbs = doc.verbs().out('array')
+
+      if (verbs.some(v => ["add", "put", "schedule", "insert"].includes(v))) {
+        return nouns[0] || null
+      }
+
+      return nouns[0] || null
+    }
+    console.log(extractTask("Yo dude add the coding to my list"))   // coding
+    console.log(extractTask("Put gym workout in my list"))          // gym workout
+    console.log(extractTask("Schedule project meeting for tomorrow")) // project meeting
+    console.log(extractTask("Hey bro remind me about laundry"))
   }, [])
 
 
@@ -323,12 +347,14 @@ const AiPage = () => {
           text: `you are sending the user a reminding message as JARVIS for this'${parsedmessa.task}',make it in a single line`,
           context: "task"
         });
+        const task = extractTask(message);
         const remmess = aiBotReply.data.response.replace(/JARVIS:/g, '').replace(/<\/?p[^>]*>/gi, '');
         const saveTaskdeadline = await axios.post("https://jarvis-ai-8pr6.onrender.com/tasks", {
           username: usersname,
           intent: parsedmessa.intent,
           datetime: parsedmessa.datetime,
-          task: remmess
+          task: task,
+          message: remmess,
         }, {
           headers: {
             Authorization: `Bearer ${jwt}`

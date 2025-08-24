@@ -442,6 +442,7 @@ const TaskSchema = new mongoose.Schema({
   intent: String,
   datetime: Date,
   task: String,
+  message: String
 })
 
 const TaskModel = mongoose.model("Task", TaskSchema)
@@ -462,14 +463,15 @@ app.post("/tasks", async (req, res) => {
     if (!decoded || !decoded.username) {
       return res.status(401).json({ error: 'Invalid token' });
     }
-    const { username, datetime, intent, task } = req.body;
+    const { username, datetime, intent, task, message } = req.body;
 
     if (!username) return res.status(400).send("Reminder name is required.");
     const updatedTask = await new TaskModel({
       username,
       datetime,
       intent,
-      task
+      task,
+      message
     });
     await updatedTask.save();
 
@@ -559,6 +561,22 @@ cron.schedule("* * * * *", async () => {
   } catch (error) {
     console.error("❌ Error Checking Reminders:", error);
   }
+
+  try {
+    const dueTasks = await TaskModel.find({
+      datetime: { $gte: now, $lte: new Date(now.getTime() + 59000) }
+    });
+    for (const rem of dueTasks) {
+      const message = `${rem.message}`;
+      await sendTelegramMessage(message, rem.username);
+      TaskModel.findByIdAndDelete(rem._id)
+        .then(() => console.log("🗑 Task deleted"))
+        .catch((err) => console.error("❌ Error deleting Task:", err));
+    }
+  }
+  catch (error) {
+     console.error("Error:",error);
+  }
 });
 
 cron.schedule('0 9 * * *', async () => {
@@ -585,9 +603,9 @@ cron.schedule('0 9 * * *', async () => {
         const dueDate = new Date(task.datetime).toLocaleString('en-IN', {
           timeZone: 'Asia/Kolkata',
         });
-        message = `"${task.task}" Due Date:${dueDate}`;
+        message = `"${task.message}" Due Date:${dueDate}`;
       } else {
-        message = `"${task.task}"`;
+        message = `"${task.message}"`;
       }
       try {
         await sendTelegramMessage(message);
