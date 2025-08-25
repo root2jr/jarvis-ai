@@ -308,8 +308,7 @@ app.post('/convoss/:username', async (req, res) => {
 const Schema = new mongoose.Schema({
   usermail: String,
   password: String,
-  telegramToken: String,
-  android: Boolean
+  telegramToken: String
 });
 
 const model = mongoose.model('login', Schema);
@@ -319,7 +318,7 @@ const saltRounds = 10;
 
 app.post('/login', async (req, res) => {
   try {
-    const { usermail, password, change, telegramToken, android } = req.body;
+    const { usermail, password, change, telegramToken } = req.body;
     name = usermail;
     if (change) {
       const hashedpass = await bcrypt.hash(password, saltRounds);
@@ -340,7 +339,7 @@ app.post('/login', async (req, res) => {
         }
       } else {
         const encryptedPassword = await bcrypt.hash(password, saltRounds);
-        const newUser = new model({ usermail, password: encryptedPassword, telegramToken: telegramToken, android: android });
+        const newUser = new model({ usermail, password: encryptedPassword, telegramToken: telegramToken });
         await newUser.save();
         return res.json({ status: 'ok', message: 'New user created' });
       }
@@ -486,13 +485,13 @@ app.post("/tasks", async (req, res) => {
   }
 });
 
-app.post("/removetasks", async (req, res) => {
-  try {
-    const response = await TaskModel.findOneAndDelete({ task: req.body.task });
-    res.send("Task Deleted");
+app.post("/removetasks", async(req,res) => {
+  try{
+   const response = await TaskModel.findOneAndDelete({task: req.body.task});
+   res.send("Task Deleted");
   }
-  catch (error) {
-    console.error("Error:", error);
+  catch(error){
+    console.error("Error:",error);
   }
 })
 
@@ -509,10 +508,6 @@ app.post("/fetchtasks", async (req, res) => {
 
 })
 
-
-
-
-
 app.post("/parsetext", async (req, res) => {
   const text = req.body.text;
   const parseddate = chrono.parseDate(text);
@@ -527,7 +522,7 @@ app.post("/parsetext", async (req, res) => {
     });
   }
 
-  return res.json({ date: parseddate, task: task });
+  return res.json({ date: parseddate, task: task || text })
 
 })
 
@@ -554,7 +549,7 @@ cron.schedule("* * * * *", async () => {
   const now = new Date();
   now.setSeconds(0);
   now.setMilliseconds(0);
-  const user = await model.findOne({ usermail: username });
+
   console.log(`⏰ Cron Job running at IST ${now.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' })}`);
 
   try {
@@ -565,34 +560,8 @@ cron.schedule("* * * * *", async () => {
 
     for (const rem of dueReminders) {
       const message = `${rem.task}`;
-      if (user.android) {
-        if (!Expo.isExpoPushToken(user.telegramToken)) {
-          continue;
-        }
 
-        const messages = [{
-          to: token,
-          sound: "default",
-          title: "🔔 Reminder",
-          body: rem.message,
-          data: { withSome: "data" },
-        }];
-
-        try {
-          let chunks = expo.chunkPushNotifications(messages);
-          let tickets = [];
-          for (let chunk of chunks) {
-            let ticketChunk = await expo.sendPushNotificationsAsync(chunk);
-            tickets.push(...ticketChunk);
-          }
-        }
-        catch (error) {
-          console.error("Error:", error);
-        }
-      }
-      else {
-        await sendTelegramMessage(message, rem.username);
-      }
+      await sendTelegramMessage(message, rem.username);
       Reminder.findByIdAndDelete(rem._id)
         .then(() => console.log("🗑 Reminder deleted"))
         .catch((err) => console.error("❌ Error deleting reminder:", err));
@@ -609,31 +578,6 @@ cron.schedule("* * * * *", async () => {
     });
     for (const rem of dueTasks) {
       const message = `${rem.message}`;
-      if (user.android) {
-        if (!Expo.isExpoPushToken(user.telegramToken)) {
-          continue;
-        }
-
-        const messages = [{
-          to: token,
-          sound: "default",
-          title: "🔔 Reminder",
-          body: rem.message,
-          data: { withSome: "data" },
-        }];
-
-        try {
-          let chunks = expo.chunkPushNotifications(messages);
-          let tickets = [];
-          for (let chunk of chunks) {
-            let ticketChunk = await expo.sendPushNotificationsAsync(chunk);
-            tickets.push(...ticketChunk);
-          }
-        }
-        catch (error) {
-          console.error("Error:", error);
-        }
-      }
       await sendTelegramMessage(message, rem.username);
       TaskModel.findByIdAndDelete(rem._id)
         .then(() => console.log("🗑 Task deleted"))
@@ -641,7 +585,7 @@ cron.schedule("* * * * *", async () => {
     }
   }
   catch (error) {
-    console.error("Error:", error);
+     console.error("Error:",error);
   }
 });
 
