@@ -44,7 +44,6 @@ const Loginpage = () => {
             usermail: usermail,
             password: password,
             telegramToken: telegramID,
-            android: false
         });
         const data = response.data;
         u.value = '';
