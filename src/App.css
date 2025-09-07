@@ -25,6 +25,8 @@
     opacity: 0;
     animation: appear 4s forwards;
     animation-delay: 5s;
+    display: flex;
+    flex-direction: column;
     justify-content: center;
     justify-items: center;
 }
@@ -61,6 +63,7 @@ nav p{
         opacity: 1;
     }
 }
+
 .custom-class{
     font-family: 'Orbitron';
     width:fit-content;
@@ -77,6 +80,7 @@ nav p{
 .batton{
     width: fit-content;
     height: fit-content;
+    align-self: center;
 }
 
 .pow{
