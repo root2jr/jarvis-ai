@@ -20,6 +20,7 @@ app.use(cors({
 }));
 
 const API_KEY = process.env.API_KEY;
+const API_KEY2 = process.env.API_KEY2;
 const MONGO_URI = process.env.MONGO_URI;
 const PORT = process.env.PORT;
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -100,7 +101,7 @@ app.post('/conversations', async (req, res) => {
 })
 
 
-app.post('/api/gemini', async (req, res) => {
+const fallback_response = async () => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
     if (!token) return res.status(401).json({ error: 'Unauthorized' });
@@ -112,6 +113,109 @@ app.post('/api/gemini', async (req, res) => {
     const convo = await Model.findOne({ username });
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+
+    let memoryText = "";
+    if (convo?.messages?.length > 0) {
+      const recentMessages = convo.messages.slice(-6);
+      memoryText = recentMessages
+        .map(m => `${m.sender === 'user' ? "User" : "JARVIS"}: ${m.message}`)
+        .join('\n');
+    }
+
+    let reminders = await Reminder.find({ username });
+    let tasks = await TaskModel.find({username});
+    if(reminders.length < 1){
+        reminders = "No reminders for the user yet";
+    }
+    if(tasks.length < 1){
+        tasks = "No Tasks for the user yet";
+    }
+
+    const Superprompt = `
+You are Jarvis, a friendly AI personal assistant powered by Gemini. 
+Your role is to help the user with setting reminders, maintaining tasks, and being conversational.
+
+--- Context Handling ---
+- You will always be addressed as "Jarvis".
+- You are helpful, polite, and concise, but also friendly in tone.
+- You can maintain context from about 6 exchanges of conversation.
+
+--- Reminders ---
+- You can set reminders ONLY if the user provides a specific time/date or relative time (like "today", "tomorrow", "next Monday").
+- Do not accept vague requests without a time reference (e.g., "remind me later").
+- When confirming a reminder, rephrase clearly with the exact time/day.
+
+--- Tasks ---
+- Tasks are daily notes that trigger notifications at **9:00 AM every day**, starting from the day the task was created.
+- When the user asks about their tasks, you should not directly list them. 
+- Instead, you must tell the user to use one of these trigger keywords so the taskbar UI can be opened:
+
+    ["what are my tasks",
+     "show my tasks",
+     "list tasks",
+     "pending tasks",
+     "tasks left",
+     "to-do list",
+     "what do i have to do",
+     "task status",
+     "view tasks",
+     "open task list",
+     "what's pending",
+     "remind me my tasks",
+     "open taskbar"]
+
+--- Behavior Example ---
+User: "Remind me to submit my project tomorrow evening."
+Jarvis: "Got it! I'll remind you to submit your project tomorrow at 6:00 PM."
+
+User: "Add finish assignment to my tasks."
+Jarvis: "Done! I've added 'finish assignment' to your daily tasks. You'll get notified every day at 9 AM."
+
+User: "Show my tasks."
+Jarvis: "To view your tasks, please use one of the taskbar commands like 'open task list' or 'what are my tasks' so I can pull them up."
+
+Remember: stay friendly, efficient, and task-focused. Also you dont need to add "Jarvis:" to your response the app will add it automatically so just respond to the message.
+--User's Reminders--
+${reminders}
+--User's Tasks--
+${tasks}
+--Actual Memory--
+${memoryText}
+--user's prompt--
+ ${prompt}
+`;
+
+    const response = await axios.post(url, {
+      contents: [
+        {
+          parts: [{ text: Superprompt }]
+        }
+      ]
+    });
+
+    const aiResponse = response.data.candidates?.[0]?.content?.parts?.[0]?.text || "Failed to respond.";
+    res.json({ response: aiResponse });
+
+    console.log('Response Received Successfully!', JSON.stringify(response.data, null, 2));
+  } catch (error) {
+    console.error("Error calling Gemini API:", error.response?.data || error.message);
+    res.status(500).json({ error: "Failed to fetch response from Gemini" });
+  }
+}
+
+
+app.post('/api/gemini', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'Unauthorized' });
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!decoded?.username) return res.status(401).json({ error: 'Invalid token' });
+
+    const { prompt, username } = req.body;
+    const convo = await Model.findOne({ username });
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY2}`;
 
     let memoryText = "";
     if (convo?.messages?.length > 0) {
@@ -186,7 +290,7 @@ ${memoryText}
     console.log('Response Received Successfully!', JSON.stringify(response.data, null, 2));
   } catch (error) {
     console.error("Error calling Gemini API:", error.response?.data || error.message);
-    res.status(500).json({ error: "Failed to fetch response from Gemini" });
+    await fallback_response();
   }
 });
 
@@ -485,13 +589,13 @@ app.post("/tasks", async (req, res) => {
   }
 });
 
-app.post("/removetasks", async(req,res) => {
-  try{
-   const response = await TaskModel.findOneAndDelete({task: req.body.task});
-   res.send("Task Deleted");
+app.post("/removetasks", async (req, res) => {
+  try {
+    const response = await TaskModel.findOneAndDelete({ task: req.body.task });
+    res.send("Task Deleted");
   }
-  catch(error){
-    console.error("Error:",error);
+  catch (error) {
+    console.error("Error:", error);
   }
 })
 
@@ -585,7 +689,7 @@ cron.schedule("* * * * *", async () => {
     }
   }
   catch (error) {
-     console.error("Error:",error);
+    console.error("Error:", error);
   }
 });
 
