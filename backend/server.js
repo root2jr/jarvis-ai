@@ -9,6 +9,7 @@ import nodemailer from 'nodemailer'
 import cron from 'node-cron';
 import { spawn } from 'child_process'
 import * as chrono from "chrono-node";
+import { Expo } from 'expo-server-sdk';
 
 dotenv.config();
 const app = express();
@@ -27,6 +28,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
+const expo = new Expo();
 
 mongoose.connect(MONGO_URI)
   .then(() => console.log('MongoDB Connected Successfully!'))
@@ -101,7 +103,7 @@ app.post('/conversations', async (req, res) => {
 })
 
 
-const fallback_response = async () => {
+const fallback_response = async (req) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
     if (!token) return res.status(401).json({ error: 'Unauthorized' });
@@ -123,12 +125,12 @@ const fallback_response = async () => {
     }
 
     let reminders = await Reminder.find({ username });
-    let tasks = await TaskModel.find({username});
-    if(reminders.length < 1){
-        reminders = "No reminders for the user yet";
+    let tasks = await TaskModel.find({ username });
+    if (reminders.length < 1) {
+      reminders = "No reminders for the user yet";
     }
-    if(tasks.length < 1){
-        tasks = "No Tasks for the user yet";
+    if (tasks.length < 1) {
+      tasks = "No Tasks for the user yet";
     }
 
     const Superprompt = `
@@ -194,12 +196,12 @@ ${memoryText}
     });
 
     const aiResponse = response.data.candidates?.[0]?.content?.parts?.[0]?.text || "Failed to respond.";
-    res.json({ response: aiResponse });
-
     console.log('Response Received Successfully!', JSON.stringify(response.data, null, 2));
+    return aiResponse;
+
   } catch (error) {
     console.error("Error calling Gemini API:", error.response?.data || error.message);
-    res.status(500).json({ error: "Failed to fetch response from Gemini" });
+    return "Failed to fetch response from Gemini";
   }
 }
 
@@ -290,7 +292,8 @@ ${memoryText}
     console.log('Response Received Successfully!', JSON.stringify(response.data, null, 2));
   } catch (error) {
     console.error("Error calling Gemini API:", error.response?.data || error.message);
-    await fallback_response();
+    const response = await fallback_response(req);
+    res.json({ response: response })
   }
 });
 
@@ -412,7 +415,8 @@ app.post('/convoss/:username', async (req, res) => {
 const Schema = new mongoose.Schema({
   usermail: String,
   password: String,
-  telegramToken: String
+  telegramToken: String,
+  android: Boolean
 });
 
 const model = mongoose.model('login', Schema);
@@ -422,7 +426,7 @@ const saltRounds = 10;
 
 app.post('/login', async (req, res) => {
   try {
-    const { usermail, password, change, telegramToken } = req.body;
+    const { usermail, password, change, telegramToken, android } = req.body;
     name = usermail;
     if (change) {
       const hashedpass = await bcrypt.hash(password, saltRounds);
@@ -443,7 +447,7 @@ app.post('/login', async (req, res) => {
         }
       } else {
         const encryptedPassword = await bcrypt.hash(password, saltRounds);
-        const newUser = new model({ usermail, password: encryptedPassword, telegramToken: telegramToken });
+        const newUser = new model({ usermail, password: encryptedPassword, telegramToken: telegramToken, android: android });
         await newUser.save();
         return res.json({ status: 'ok', message: 'New user created' });
       }
@@ -630,12 +634,42 @@ app.post("/parsetext", async (req, res) => {
 
 })
 
+const handle_android_notifications = async (item, body) => {
+  if (!Expo.isExpoPushToken(pushToken)) {
+    return res.status(400).send('Invalid Expo push token');
+  }
+
+  const messages = [{
+    to: pushToken,
+    sound: 'default',
+    title: 'Jarvis',
+    body: body,
+    data: data || {},
+  }];
+
+  try {
+    const chunks = expo.chunkPushNotifications(messages);
+    const tickets = [];
+    for (const chunk of chunks) {
+      const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+      tickets.push(...ticketChunk);
+    }
+    res.status(200).json({ tickets });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to send notification' });
+  }
+}
+
 
 const sendTelegramMessage = async (text, username) => {
   try {
 
     console.log("Telegram function works");
     const telegram_token = await model.findOne({ usermail: username });
+    if (telegram_token.android) {
+      handle_android_notifications(telegram_token, body)
+    }
     const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
     await axios.post(url, {
       chat_id: telegram_token.telegramToken,
@@ -664,7 +698,6 @@ cron.schedule("* * * * *", async () => {
 
     for (const rem of dueReminders) {
       const message = `${rem.task}`;
-
       await sendTelegramMessage(message, rem.username);
       Reminder.findByIdAndDelete(rem._id)
         .then(() => console.log("🗑 Reminder deleted"))
