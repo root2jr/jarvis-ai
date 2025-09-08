@@ -9,7 +9,7 @@ import nodemailer from 'nodemailer'
 import cron from 'node-cron';
 import { spawn } from 'child_process'
 import * as chrono from "chrono-node";
-import { Expo } from 'expo-server-sdk';
+import Expo from 'expo-server-sdk'
 
 dotenv.config();
 const app = express();
