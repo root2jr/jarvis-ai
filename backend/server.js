@@ -675,6 +675,7 @@ app.post("/parsetext", async (req, res) => {
   const text = req.body.text;
   const parseddate = chrono.parseDate(text);
   const datetime = parseddate.toISOString();
+  console.log(datetime);
 
   if (!parseddate) {
     return res.json({ "message": "Could Extract Time" });
