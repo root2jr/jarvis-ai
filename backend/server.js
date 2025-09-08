@@ -352,7 +352,63 @@ context: ${context}
 
   catch (error) {
     console.error("Error:", error);
+    try {
+      const text = req.body.text;
+      const context = req.body.context;
+      const prompt = `
+You are Jarvis, an AI assistant responsible for generating clean and friendly notification texts.
+
+--- General Rules ---
+- Notifications must be **short, clear, and natural**.
+- Always be polite and motivational, but not too formal.
+- Keep the tone like a helpful assistant reminding the user, not robotic.
+
+--- Reminders ---
+- A reminder notification must include the task and the time context if relevant.
+- Do not add unnecessary fluff.
+- Keep it under 12 words if possible.
+
+Examples:
+- "🔔 Hey there, Submit your project by 6:00 PM."
+- "🔔 Jarvis here, Take your medicine now."
+- "🔔 You asked me to remind you to Call mom tomorrow evening."
+
+--- Daily Tasks ---
+- Daily task notifications are triggered at 9:00 AM every day.
+- These should encourage the user to check tasks or start their day productively.
+- Use a friendly, motivating tone.
+
+Examples:
+- "🌞 Good morning! Here's your daily task list."
+- "📋 Don’t forget your pending tasks today."
+- "🚀 Time to check your to-do list and get started!"
+- "✅ Stay on track! Review your tasks for today."
+
+--- Behavior ---
+- If generating for a reminder, use the reminder style.
+- If generating for daily tasks, use the daily task style.
+- Do not include explanations, just the raw notification text.
+--Generate Notification for the prompt--
+user-prompt: ${text} 
+context: ${context}
+`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY2}`;
+      const response = await axios.post(url, {
+        contents: [
+          {
+            parts: [{ text: prompt }]
+          }
+        ]
+      });
+
+      const aiResponse = response.data.candidates?.[0]?.content?.parts?.[0]?.text || "Failed to respond.";
+      res.json({ response: aiResponse });
+    }
+    catch (error) {
+      console.error("Error:", error);
+    }
   }
+
 })
 
 
@@ -618,6 +674,8 @@ app.post("/fetchtasks", async (req, res) => {
 app.post("/parsetext", async (req, res) => {
   const text = req.body.text;
   const parseddate = chrono.parseDate(text);
+  const datetime = parseddate.toISOString();
+
   if (!parseddate) {
     return res.json({ "message": "Could Extract Time" });
   }
@@ -629,12 +687,13 @@ app.post("/parsetext", async (req, res) => {
     });
   }
 
-  return res.json({ date: parseddate, task: task || text })
+  return res.json({ date: datetime, task: task || text })
 
 })
 
 const handle_android_notifications = async (item, body) => {
   if (!Expo.isExpoPushToken(item.telegramToken)) {
+    console.log("Error:Invalid Expo token.");
     return;
   }
 
