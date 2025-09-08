@@ -9,7 +9,7 @@ import nodemailer from 'nodemailer'
 import cron from 'node-cron';
 import { spawn } from 'child_process'
 import * as chrono from "chrono-node";
-import Expo from 'expo-server-sdk'
+import { Expo } from 'expo-server-sdk';
 
 dotenv.config();
 const app = express();
@@ -634,12 +634,12 @@ app.post("/parsetext", async (req, res) => {
 })
 
 const handle_android_notifications = async (item, body) => {
-  if (!Expo.isExpoPushToken(pushToken)) {
-    return res.status(400).send('Invalid Expo push token');
+  if (!Expo.isExpoPushToken(item.telegramToken)) {
+    return;
   }
 
   const messages = [{
-    to: pushToken,
+    to: item.telegramToken,
     sound: 'default',
     title: 'Jarvis',
     body: body,
@@ -653,10 +653,9 @@ const handle_android_notifications = async (item, body) => {
       const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
       tickets.push(...ticketChunk);
     }
-    res.status(200).json({ tickets });
+    return;
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Failed to send notification' });
   }
 }
 
@@ -667,7 +666,7 @@ const sendTelegramMessage = async (text, username) => {
     console.log("Telegram function works");
     const telegram_token = await model.findOne({ usermail: username });
     if (telegram_token.android) {
-      handle_android_notifications(telegram_token, body)
+      handle_android_notifications(telegram_token, text)
     }
     const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
     await axios.post(url, {
