@@ -114,7 +114,7 @@ const fallback_response = async (req) => {
     const { prompt, username } = req.body;
     const convo = await Model.findOne({ username });
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY2}`;
 
     let memoryText = "";
     if (convo?.messages?.length > 0) {
@@ -217,7 +217,7 @@ app.post('/api/gemini', async (req, res) => {
     const { prompt, username } = req.body;
     const convo = await Model.findOne({ username });
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY2}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
     let memoryText = "";
     if (convo?.messages?.length > 0) {
