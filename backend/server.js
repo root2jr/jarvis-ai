@@ -675,7 +675,7 @@ app.post("/parsetext", async (req, res) => {
   const text = req.body.text;
   const parseddate = chrono.parseDate(text);
   const utcDate = new Date(parseddate.getTime() - (5 * 60 + 30) * 60 * 1000);
-  
+
 
   if (!parseddate) {
     return res.json({ "message": "Could Extract Time" });
@@ -703,20 +703,23 @@ const handle_android_notifications = async (item, body) => {
     sound: 'default',
     title: 'Jarvis',
     body: body,
-    data: data || {},
+    data:{
+    source: 'Jarvis',
+    category: 'system'
+  }
   }];
 
-  try {
-    const chunks = expo.chunkPushNotifications(messages);
-    const tickets = [];
-    for (const chunk of chunks) {
-      const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
-      tickets.push(...ticketChunk);
-    }
-    return;
-  } catch (error) {
-    console.error(error);
+try {
+  const chunks = expo.chunkPushNotifications(messages);
+  const tickets = [];
+  for (const chunk of chunks) {
+    const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+    tickets.push(...ticketChunk);
   }
+  return;
+} catch (error) {
+  console.error(error);
+}
 }
 
 
@@ -747,8 +750,8 @@ cron.schedule("* * * * *", async () => {
   now.setMilliseconds(0);
 
   console.log(`⏰ Cron Job running at IST ${now.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' })}`);
-  console.log("$gte:",now);
-  console.log("$lte:",new Date(now.getTime() + 59000));
+  console.log("$gte:", now);
+  console.log("$lte:", new Date(now.getTime() + 59000));
 
   try {
     const dueReminders = await Reminder.find({
