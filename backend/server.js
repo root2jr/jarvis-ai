@@ -674,12 +674,7 @@ app.post("/fetchtasks", async (req, res) => {
 app.post("/parsetext", async (req, res) => {
   const text = req.body.text;
   const parseddate = chrono.parseDate(text);
-  parseddate.setSeconds(0);
-  parseddate.setMilliseconds(0);
-
-  const istDate = new Date(parseddate.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
-
-
+  const utcDate = new Date(parseddate.getTime());
   
 
   if (!parseddate) {
@@ -693,7 +688,7 @@ app.post("/parsetext", async (req, res) => {
     });
   }
 
-  return res.json({ date: istDate, task: task || text })
+  return res.json({ date: utcDate, task: task || text })
 
 })
 
