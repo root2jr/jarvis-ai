@@ -674,7 +674,7 @@ app.post("/fetchtasks", async (req, res) => {
 app.post("/parsetext", async (req, res) => {
   const text = req.body.text;
   const parseddate = chrono.parseDate(text);
-  const utcDate = new Date(parseddate.getTime());
+  const utcDate = new Date(parseddate.getTime() + (5 * 60 + 30) * 60 * 1000);
   
 
   if (!parseddate) {
