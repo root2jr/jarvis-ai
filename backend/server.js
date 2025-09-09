@@ -673,12 +673,14 @@ app.post("/fetchtasks", async (req, res) => {
 
 app.post("/parsetext", async (req, res) => {
   const text = req.body.text;
-  const parseddate = chrono.parseDate(text, new Date(), { timezone: 330 }); // 330 minutes = +5:30 IST
+  const parseddate = chrono.parseDate(text);
   parseddate.setSeconds(0);
   parseddate.setMilliseconds(0);
 
-  const datetime = parseddate.toISOString();
-  console.log(datetime);
+  const istDate = new Date(parseddate.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+
+
+  
 
   if (!parseddate) {
     return res.json({ "message": "Could Extract Time" });
@@ -691,7 +693,7 @@ app.post("/parsetext", async (req, res) => {
     });
   }
 
-  return res.json({ date: datetime, task: task || text })
+  return res.json({ date: istDate, task: task || text })
 
 })
 
