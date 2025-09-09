@@ -673,7 +673,10 @@ app.post("/fetchtasks", async (req, res) => {
 
 app.post("/parsetext", async (req, res) => {
   const text = req.body.text;
-  const parseddate = chrono.parseDate(text);
+  const parseddate = chrono.parseDate(text, new Date(), { timezone: 330 }); // 330 minutes = +5:30 IST
+  parseddate.setSeconds(0);
+  parseddate.setMilliseconds(0);
+
   const datetime = parseddate.toISOString();
   console.log(datetime);
 
