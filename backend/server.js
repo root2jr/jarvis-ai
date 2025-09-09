@@ -752,6 +752,8 @@ cron.schedule("* * * * *", async () => {
   now.setMilliseconds(0);
 
   console.log(`⏰ Cron Job running at IST ${now.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' })}`);
+  console.log("$gte:",now);
+  console.log("$lte:",new Date(now.getTime() + 59000));
 
   try {
     const dueReminders = await Reminder.find({
